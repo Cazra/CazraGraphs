@@ -1,0 +1,58 @@
+--
+Vertices
+--
+Cazra
+Mort
+Delia
+Malcolm
+Tymere
+Appraise
+Balance
+Bluff
+Climb
+Concentration
+Craft
+Decipher Script
+Diplomacy
+Disable Device
+Disguise
+Escape Artist
+Forgery
+GatherInformation
+Handle Animal
+Heal
+Hide
+Intimidate
+Jump
+Knowledge(Arcana)
+Knowledge(Arch & Eng)
+Knowledge(Dungeoneering)
+Knowledge(Geography)
+Knowledge(History)
+Knowledge(Local)
+Knowledge(Nature)
+Knowledge(Nob & Roy)
+Knowledge(Religion)
+Knowledge(Planes)
+Listen
+Move Silently
+OpenLock
+Perform
+Profression
+Ride
+Search
+Sense Motive
+Sleight Of Hand
+Spellcraft
+Spot
+Survival
+Swim
+Tumble
+Use Magic Device
+Use Rope
+--
+Edges
+--
+Cazra -> Appraise, Craft, Disable Device, Knowledge(Arcana), Knowledge(Arch & Eng), Search, Spellcraft, Use Magic Device
+Mort -> Balance, Climb, Jump, Search
+Malcolm -> Knowledge(History)
