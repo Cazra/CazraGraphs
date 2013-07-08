@@ -183,5 +183,100 @@ public class GraphSolver {
     return depths;
   }
   
+  
+  
+  
+  /**
+   * Computes the bipartiteness of a graph.
+   * A list of 3 sets are returned. The first two are the bipartite sets.
+   * The third set is the set of odd-cycle vertices.
+   * There may be multiple solutions to show a graph's bipartiteness. This 
+   * algorithm only returns 1 solution though.
+   */
+  public static List<Set<GNodeSprite>> bicolorGraph(GraphSprite graph, String startNodeID) {
+    List<Set<GNodeSprite>> result = new ArrayList<>();
+    Set<GNodeSprite> redSet = new HashSet<>();
+    Set<GNodeSprite> greenSet = new HashSet<>();
+    Set<GNodeSprite> oddSet = new HashSet<>();
+    result.add(redSet);
+    result.add(greenSet);
+    result.add(oddSet);
+    
+    Set<GNodeSprite> visited = new HashSet<>();
+    Queue<GNodeSprite> startingNodes = new LinkedList<>(graph.nodes.values());
+    
+    // get our first starting node.
+    GNodeSprite node = graph.getNode(startNodeID);
+    if(node == null) {
+      node = startingNodes.remove();
+    }
+    
+    while(!startingNodes.isEmpty()) {
+      if(!visited.contains(node)) {
+        bicolorPartial(graph, node, visited, result);
+      }
+      
+      // get our next starting node.
+      node = startingNodes.remove();
+    }
+    
+    return result;
+  }
+  
+  
+  /** Computes the bipartness of part of a graph by dfs. */
+  private static void bicolorPartial(GraphSprite graph, GNodeSprite node, Set<GNodeSprite> visited, List<Set<GNodeSprite>> result) {
+    int RED = 0;
+    int GREEN = 1;
+    int ODD = -1;
+    
+    Set<GNodeSprite> redSet = result.get(0);
+    Set<GNodeSprite> greenSet = result.get(1);
+    Set<GNodeSprite> oddSet = result.get(2);
+    
+    Queue<GNodeSprite> dfsNodes = new LinkedList<>();
+    Queue<Integer> dfsDest = new LinkedList<>();
+    
+    // Ready our dfs queues.
+    dfsNodes.add(node);
+    dfsDest.add(RED);
+    
+    // Do a depth-first search do compute the graph coloring.
+    while(!dfsNodes.isEmpty()) {
+      node = dfsNodes.remove();
+      int color = dfsDest.remove();
+      
+      // process the node.
+      if(!visited.contains(node)) {
+        visited.add(node);
+        if(color == RED) {
+          redSet.add(node);
+          for(GNodeSprite toNode : node.getNeighbors()) {
+            if(redSet.contains(toNode)) {
+              redSet.remove(toNode);
+              oddSet.add(toNode);
+            }
+            else if(!greenSet.contains(toNode)){
+              dfsNodes.add(toNode);
+              dfsDest.add(GREEN);
+            }
+          }
+        }
+        else if(color == GREEN) {
+          greenSet.add(node);
+          for(GNodeSprite toNode : node.getNeighbors()) {
+            if(greenSet.contains(toNode)) {
+              greenSet.remove(toNode);
+              oddSet.add(toNode);
+            }
+            else if(!redSet.contains(toNode)){
+              dfsNodes.add(toNode);
+              dfsDest.add(RED);
+            }
+          }
+        }
+      }
+    }
+  }
 }
 

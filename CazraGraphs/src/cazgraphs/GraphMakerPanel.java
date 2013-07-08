@@ -255,6 +255,10 @@ public class GraphMakerPanel extends GamePanel {
     }
     
     
+    if(keyboard.justPressed(KeyEvent.VK_B)) {
+      System.out.println(GraphSolver.bicolorGraph(graph, null));
+    }
+    
   }
   
   

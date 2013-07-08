@@ -56,3 +56,5 @@ Edges
 Cazra -> Appraise, Craft, Disable Device, Knowledge(Arcana), Knowledge(Arch & Eng), Search, Spellcraft, Use Magic Device
 Mort -> Balance, Climb, Jump, Search
 Malcolm -> Knowledge(History)
+Tymere -> Bluff, Diplomacy
+Delia -> Handle Animal, Heal
