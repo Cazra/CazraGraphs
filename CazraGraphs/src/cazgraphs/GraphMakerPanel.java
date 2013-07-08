@@ -5,7 +5,9 @@ import java.awt.event.KeyEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.io.*;
+import java.util.HashMap;
 import java.util.Map;
 import javax.swing.JOptionPane;
 
@@ -29,13 +31,15 @@ public class GraphMakerPanel extends GamePanel {
   public Camera camera;
   
   
-  public GNodeSprite draggedNode;
-  
   public GNodeSprite makeEdgeFrom;
   public GNodeSprite makeEdgeTo;
   
-  public double dragNodeX = 0;
-  public double dragNodeY = 0;
+  public boolean showingSelectRect = false;
+  public double selectRectLeft = 0;
+  public double selectRectTop = 0;
+  
+  /** A mapping of nodes being dragged to their drag offsets. */
+  public Map<GNodeSprite, Point2D> draggedNodes = new HashMap<>();
   
   
   public GraphMakerPanel(String filepath) {
@@ -133,36 +137,21 @@ public class GraphMakerPanel extends GamePanel {
     camera.update();
     Point2D mouseWorld = camera.screenToWorld(mouse.position);
     
-
-    // select and drag nodes.
-    if(mouse.justLeftPressed) {
-      GNodeSprite node = graph.getNodeAtPoint(mouse.position);
-      graph.selectNode(node);
-      draggedNode = node;
-      if(node != null) {
-        dragNodeX = node.x - mouseWorld.getX();
-        dragNodeY = node.y - mouseWorld.getY();
-      }
-    }
     
-    if(mouse.isLeftPressed && draggedNode != null) {
-      draggedNode.x = mouseWorld.getX() + dragNodeX;
-      draggedNode.y = mouseWorld.getY() + dragNodeY;
-    }
+    // mouse click interaction.
+    GNodeSprite node = graph.getNodeAtPoint(mouse.position);
     
-    if(mouse.justLeftClicked) {
-      draggedNode = null;
-    }
     
     // Camera controls for panning/zooming
     if(mouse.justLeftPressed)
       camera.endDrag();
       
-    if(mouse.isLeftPressed && draggedNode == null)
+    if(mouse.isLeftPressed && node == null && draggedNodes.isEmpty() && !keyboard.isPressed(KeyEvent.VK_SHIFT) && !showingSelectRect)
       camera.drag(mouse.position);
       
-    if(mouse.justLeftClicked)
+    if(mouse.justLeftClicked) {
       camera.endDrag();
+    }
       
     if(mouse.wheel < 0)
       camera.zoomAtScreen(1.25, mouse.position);
@@ -175,33 +164,109 @@ public class GraphMakerPanel extends GamePanel {
       reset();
     }
     
-    if(mouse.doubleClicked) {
-      GNodeSprite node = graph.getNodeAtPoint(mouse.position);
-      
-      if(node == null) {
+    
+    // node interaction
+    if(node == null) {
+      // Double-clicking in a blank area produces a new vertex. 
+      if(mouse.doubleClicked) {
         String name = JOptionPane.showInputDialog("vertex name:");
         if(!graph.nodes.containsKey(name)) {
           node = graph.addNode(name);
-          node.x = mouseWorld.getX();
-          node.y = mouseWorld.getY(); 
+          if(node != null) {
+            node.x = mouseWorld.getX();
+            node.y = mouseWorld.getY();
+          }
+        }
+      }
+      
+      if(mouse.justLeftPressed) {
+        
+        // Start a selection rectangle.
+        if(keyboard.isPressed(KeyEvent.VK_SHIFT)) {
+          showingSelectRect = true;
+          selectRectLeft = mouseWorld.getX();
+          selectRectTop = mouseWorld.getY();
+        }
+        
+        // unselect the nodes. 
+        else {
+          graph.selectNode(null);
+        }
+        
+      }
+    }
+    else {
+      // left-clicking does node selection.
+      if(mouse.justLeftPressed) {
+        // shift-click for multiple selection. 
+        if(keyboard.isPressed(KeyEvent.VK_SHIFT)) {
+          graph.selectNode(node);
+        }
+        else if(!graph.selectedNodes.contains(node)) {
+          graph.selectSingleNode(node);
+        }
+        
+        draggedNodes.clear();
+        for(GNodeSprite draggedNode : graph.selectedNodes) {
+          double dragNodeX = draggedNode.x - mouseWorld.getX();
+          double dragNodeY = draggedNode.y - mouseWorld.getY();
+          
+          draggedNodes.put(draggedNode, new Point2D.Double(dragNodeX, dragNodeY));
+        }
+      }
+      
+      // Dragging the right mouse button creates an edge from one node to another. 
+      if(mouse.justRightPressed) {
+        makeEdgeFrom = graph.getNodeAtPoint(mouse.position);
+      }
+      if(mouse.justRightClicked) {
+        makeEdgeTo = graph.getNodeAtPoint(mouse.position);
+      
+        if(makeEdgeFrom != null && makeEdgeTo != null) {
+          makeEdgeFrom.addEdge(makeEdgeTo);
+          makeEdgeFrom = null;
+          makeEdgeTo = null;
         }
       }
     }
     
-    if(mouse.justRightPressed) {
-      makeEdgeFrom = graph.getNodeAtPoint(mouse.position);
+    // node dragging
+    if(mouse.justLeftClicked) {
+      draggedNodes.clear();
     }
-    if(mouse.justRightClicked) {
-      makeEdgeTo = graph.getNodeAtPoint(mouse.position);
+    if(mouse.isLeftPressed) {
       
-      if(makeEdgeFrom != null && makeEdgeTo != null) {
-        makeEdgeFrom.addEdge(makeEdgeTo);
-        makeEdgeFrom = null;
-        makeEdgeTo = null;
+      for(GNodeSprite draggedNode : draggedNodes.keySet()) {
+        Point2D offset = draggedNodes.get(draggedNode);
+        draggedNode.x = mouseWorld.getX() + offset.getX();
+        draggedNode.y = mouseWorld.getY() + offset.getY();
       }
     }
+    
+    // selection rectangle
+    if(mouse.justLeftClicked && showingSelectRect) {
+      Rectangle2D rect = getSelectRect(mouseWorld);
+      for(GNodeSprite sprite : graph.nodes.values()) {
+        if(rect.contains(sprite.x, sprite.y)) {
+          graph.selectNode(sprite);
+        }
+      }
+      showingSelectRect = false;
+    }
+    
+    
   }
   
+  
+  
+  public Rectangle2D getSelectRect(Point2D mouseWorld) {
+    double x = Math.min(selectRectLeft, mouseWorld.getX());
+    double y = Math.min(selectRectTop, mouseWorld.getY());
+    double w = Math.abs(selectRectLeft - mouseWorld.getX());
+    double h = Math.abs(selectRectTop - mouseWorld.getY());
+    
+    return new Rectangle2D.Double(x, y, w, h);
+  }
   
   
   
@@ -230,6 +295,13 @@ public class GraphMakerPanel extends GamePanel {
       Line2D line = new Line2D.Double(makeEdgeFrom.x, makeEdgeFrom.y, mouseWorld.getX(), mouseWorld.getY());
       g2D.draw(line);
     }
+    
+    if(showingSelectRect) {
+      g.setColor(new Color(0xAAFFFF));
+      Rectangle2D rect = getSelectRect(mouseWorld);
+      g2D.draw(rect);
+    }
+    
     
     // HUD text
     

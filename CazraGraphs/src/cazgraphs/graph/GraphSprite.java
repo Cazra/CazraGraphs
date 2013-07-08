@@ -40,8 +40,11 @@ public class GraphSprite extends Sprite {
    */
   public boolean isDirected;
   
-  /** The currently selected node. */
+  /** The most recently selected node. Null if no nodes are currently selected.*/
   public GNodeSprite selectedNode = null;
+  
+  /** The set of nodes that are currently selected. */
+  public Set<GNodeSprite> selectedNodes = new HashSet<>();
   
   /** 
    * Optional reference to a camera. This is potentially useful for clipping and 
@@ -174,17 +177,30 @@ public class GraphSprite extends Sprite {
   }
   
   /** 
-   * Sets the currently selected node in this graph. 
+   * Causes a node in this graph to become selected.
    * Null causes no node to be currently selected. 
    */
   public void selectNode(GNodeSprite node) {
-    if(selectedNode != null) {
-      selectedNode.isSelected = false;
-    }
     selectedNode = node;
     if(node != null) {
       node.isSelected = true;
+      selectedNodes.add(node);
     }
+    else {
+      for(GNodeSprite selSprite : selectedNodes) {
+        selSprite.isSelected = false;
+      }
+      selectedNodes.clear();
+    }
+  }
+  
+  /**
+   * Sets a node to become the only selected node in this graph.
+   * Null causes no node to be currently selected. 
+   */
+  public void selectSingleNode(GNodeSprite node) {
+    selectNode(null);
+    selectNode(node);
   }
   
   //////// Rendering
