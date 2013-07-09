@@ -76,8 +76,7 @@ public class GraphMakerPanel extends GamePanel {
   //////// File io
   
   public void loadFromFile(String filepath) {
-    graph = new GraphSprite(true);
-    graph.layoutAlgorithm = new NGonGraphLayout();
+    reset();
     try {
       BufferedReader br = new BufferedReader(new FileReader(filepath));
       String input = "";
@@ -101,14 +100,6 @@ public class GraphMakerPanel extends GamePanel {
         }
       }
       
-      graph.stepLayout();
-      for(GNodeSprite node : graph.nodes.values()) {
-        node.x /= 80;
-        node.y /= 80;
-        node.x += 320;
-        node.y += 240;
-      }
-      
       // edges
       System.out.println("edges: ");
       String[] edges = sections[4].split("\n");
@@ -128,7 +119,7 @@ public class GraphMakerPanel extends GamePanel {
       JOptionPane.showMessageDialog(this, "Could not read graph from file: " + filepath);
       e.printStackTrace();
     }
-    graph.layoutAlgorithm = new DefaultGraphLayout();
+    graph.layoutAlgorithm = new ForceDirectedGraphLayout();
   }
   
   
@@ -146,8 +137,9 @@ public class GraphMakerPanel extends GamePanel {
       for(String name : sortedVertices) {
         output += name + "\n";
       }
-      output += "--\nEdges\n--\n";
       
+      
+      output += "--\nEdges\n--\n";
       for(String name : sortedVertices) {
         output += name + " -> ";
         
@@ -204,12 +196,7 @@ public class GraphMakerPanel extends GamePanel {
       camera.zoomAtScreen(1.25, mouse.position);
 
     if(mouse.wheel > 0)
-      camera.zoomAtScreen(0.75, mouse.position);
-      
-      
-    if(keyboard.justPressed(KeyEvent.VK_F5)) {
-      reset();
-    }
+      camera.zoomAtScreen(0.75, mouse.position); 
     
     
     // node interaction
@@ -277,6 +264,32 @@ public class GraphMakerPanel extends GamePanel {
           makeEdgeTo = null;
         }
       }
+      
+      // double-clicking does neat things depending on the current graph style/layout.
+      if(mouse.doubleClicked) {
+        if(graph.style instanceof TopologyGraphStyle) {
+          TopologyGraphStyle style = (TopologyGraphStyle) graph.style;
+          style.setTopology(node);
+        }
+        if(graph.style instanceof AncestryGraphStyle) {
+          AncestryGraphStyle style = (AncestryGraphStyle) graph.style;
+          style.setAncestry(node);
+        }
+        if(graph.style instanceof BipartiteGraphStyle) {
+          BipartiteGraphStyle style = (BipartiteGraphStyle) graph.style;
+          style.computeBipartiteness(graph, node.id);
+          
+          int hspace = 600;
+          int vspace = 40;
+          if(graph.layoutAlgorithm instanceof BipartiteGraphLayout) {
+            BipartiteGraphLayout layout = (BipartiteGraphLayout) graph.layoutAlgorithm;
+            hspace = layout.hspacing;
+            vspace = layout.vspacing;
+          }
+          
+          graph.layoutAlgorithm = new BipartiteGraphLayout(node.id, hspace, vspace);
+        }
+      }
     }
     
     // node dragging
@@ -302,25 +315,6 @@ public class GraphMakerPanel extends GamePanel {
       }
       showingSelectRect = false;
     }
-    
-    
-    if(keyboard.justPressed(KeyEvent.VK_B)) {
-      BipartiteGraphStyle bStyle = new BipartiteGraphStyle();
-      graph.style = bStyle;
-      
-      String startNodeID = null;
-      if(graph.selectedNode != null) {
-        startNodeID = graph.selectedNode.id;
-      }
-      
-      bStyle.computeBipartiteness(graph, startNodeID);
-      graph.layoutAlgorithm = new BipartiteGraphLayout(startNodeID, 600, 40);
-    }
-    
-    if(keyboard.justPressed(KeyEvent.VK_C)) {
-      System.out.println(GraphSolver.containsCycles(graph));
-    }
-    
     
     graph.stepLayout();
     

@@ -36,15 +36,16 @@ public class RandomGraphFactory {
       GNodeSprite node = graph.addNode(name);
       
       // random style
+      /*
       int shapeIndex = GameMath.rand.nextInt(3);
       if(shapeIndex == 1) {
         node.style = new RectangleNodeStyle();
       }
       else if(shapeIndex == 2) {
         node.style = new DiamondNodeStyle();
-      }
+      }*/
       
-    //  node.style = new SimpleCircleNodeStyle();
+      node.style = new EllipseNodeStyle();
     }
     
     // randomly produce the edges.
