@@ -220,11 +220,20 @@ public class GraphSolver {
       node = startingNodes.remove();
     }
     
+    // We might have one node left over. Be sure to color it too.
+    if(!visited.contains(node)) {
+      bicolorPartial(graph, node, visited, result);
+    }
+    
+//    List<GNodeSprite> vsorted = new ArrayList(visited);
+//    Collections.sort(vsorted);
+//    System.out.println(vsorted);
+    
     return result;
   }
   
   
-  /** Computes the bipartness of part of a graph by dfs. */
+  /** Computes the bipartness of part of a graph by bfs. */
   private static void bicolorPartial(GraphSprite graph, GNodeSprite node, Set<GNodeSprite> visited, List<Set<GNodeSprite>> result) {
     int RED = 0;
     int GREEN = 1;
@@ -237,11 +246,11 @@ public class GraphSolver {
     Queue<GNodeSprite> dfsNodes = new LinkedList<>();
     Queue<Integer> dfsDest = new LinkedList<>();
     
-    // Ready our dfs queues.
+    // Ready our bfs queues.
     dfsNodes.add(node);
     dfsDest.add(RED);
     
-    // Do a depth-first search do compute the graph coloring.
+    // Do a breadth-first search do compute the graph coloring.
     while(!dfsNodes.isEmpty()) {
       node = dfsNodes.remove();
       int color = dfsDest.remove();

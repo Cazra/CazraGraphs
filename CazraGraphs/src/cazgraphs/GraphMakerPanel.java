@@ -256,7 +256,16 @@ public class GraphMakerPanel extends GamePanel {
     
     
     if(keyboard.justPressed(KeyEvent.VK_B)) {
-      System.out.println(GraphSolver.bicolorGraph(graph, null));
+      BipartiteGraphStyle bStyle = new BipartiteGraphStyle();
+      graph.style = bStyle;
+      
+      String startNodeID = null;
+      if(graph.selectedNode != null) {
+        startNodeID = graph.selectedNode.id;
+      }
+      
+      bStyle.computeBipartiteness(graph, startNodeID);
+      
     }
     
   }
