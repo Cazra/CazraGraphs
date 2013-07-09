@@ -265,8 +265,12 @@ public class GraphMakerPanel extends GamePanel {
       }
       
       bStyle.computeBipartiteness(graph, startNodeID);
-      
+      graph.layoutAlgorithm = new BipartiteGraphLayout(startNodeID, 600, 40);
     }
+    
+    
+    
+    graph.layoutAlgorithm.stepLayout(graph);
     
   }
   
