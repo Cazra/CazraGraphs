@@ -112,6 +112,41 @@ public class GraphSolver {
   
   
   
+  /** Returns true iff the graph contains at least 1 cycle. */
+  public static boolean containsCycles(GraphSprite graph) {
+    Set<GNodeSprite> visited = new HashSet<>();
+    for(GNodeSprite node : graph.nodes.values()) {
+      
+      if(!visited.contains(node)) {
+        Set<GNodeSprite> visitedInComponent = new HashSet<>();
+        
+        Stack<GNodeSprite> dfs = new Stack<>();
+        dfs.push(node);
+        
+        while(!dfs.isEmpty()) {
+          GNodeSprite curNode = dfs.pop();
+          
+          if(!visited.contains(curNode)) {
+            visited.add(curNode);
+            visitedInComponent.add(curNode);
+            
+            for(GNodeSprite next : curNode.getEdges()) {
+              if(visitedInComponent.contains(next)) {
+                return true;
+              }
+              else {
+                dfs.push(next);
+              }
+            }
+          }
+        }
+      }
+    }
+    return false;
+  }
+  
+  
+  
   /** 
    * Calculates the topology of the graph starting from a single "top" node. 
    * This information is returned as a map from the nodes to their depths.
@@ -243,17 +278,17 @@ public class GraphSolver {
     Set<GNodeSprite> greenSet = result.get(1);
     Set<GNodeSprite> oddSet = result.get(2);
     
-    Queue<GNodeSprite> dfsNodes = new LinkedList<>();
-    Queue<Integer> dfsDest = new LinkedList<>();
+    Queue<GNodeSprite> bfsNodes = new LinkedList<>();
+    Queue<Integer> bfsDest = new LinkedList<>();
     
     // Ready our bfs queues.
-    dfsNodes.add(node);
-    dfsDest.add(RED);
+    bfsNodes.add(node);
+    bfsDest.add(RED);
     
     // Do a breadth-first search do compute the graph coloring.
-    while(!dfsNodes.isEmpty()) {
-      node = dfsNodes.remove();
-      int color = dfsDest.remove();
+    while(!bfsNodes.isEmpty()) {
+      node = bfsNodes.remove();
+      int color = bfsDest.remove();
       
       // process the node.
       if(!visited.contains(node)) {
@@ -266,8 +301,8 @@ public class GraphSolver {
               oddSet.add(toNode);
             }
             else if(!greenSet.contains(toNode)){
-              dfsNodes.add(toNode);
-              dfsDest.add(GREEN);
+              bfsNodes.add(toNode);
+              bfsDest.add(GREEN);
             }
           }
         }
@@ -279,8 +314,8 @@ public class GraphSolver {
               oddSet.add(toNode);
             }
             else if(!redSet.contains(toNode)){
-              dfsNodes.add(toNode);
-              dfsDest.add(RED);
+              bfsNodes.add(toNode);
+              bfsDest.add(RED);
             }
           }
         }

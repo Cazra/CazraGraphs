@@ -7,7 +7,10 @@ import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.swing.JOptionPane;
 
@@ -73,6 +76,7 @@ public class GraphMakerPanel extends GamePanel {
   //////// File io
   
   public void loadFromFile(String filepath) {
+    graph = new GraphSprite(true);
     graph.layoutAlgorithm = new NGonGraphLayout();
     try {
       BufferedReader br = new BufferedReader(new FileReader(filepath));
@@ -128,7 +132,50 @@ public class GraphMakerPanel extends GamePanel {
   }
   
   
-  
+  /** 
+   * Saves the current graph to the destination file path. 
+   * The vertex and edge data in the output file are sorted alphabetically. 
+   */
+  public void saveToFile(String destPath) {
+    try {
+      String output = "--\nVertices\n--\n";
+      
+      List<String> sortedVertices = new ArrayList<>(graph.nodes.keySet());
+      Collections.sort(sortedVertices);
+      
+      for(String name : sortedVertices) {
+        output += name + "\n";
+      }
+      output += "--\nEdges\n--\n";
+      
+      for(String name : sortedVertices) {
+        output += name + " -> ";
+        
+        List<GNodeSprite> sortedEdges = new ArrayList<>(graph.nodes.get(name).getEdges());
+        Collections.sort(sortedEdges);
+        
+        boolean first = true;
+        for(GNodeSprite edge : sortedEdges) {
+          if(first) {
+            first = false;
+          }
+          else {
+            output += ", ";
+          }
+          output += edge.id;
+        }
+        output += "\n";
+      }
+      
+      FileWriter fw = new FileWriter(destPath);
+      fw.write(output);
+      fw.close();
+    }
+    catch(Exception e) {
+      JOptionPane.showMessageDialog(this, "Could not save to file: " + destPath);
+      e.printStackTrace();
+    }
+  }
   
   
   //////////////// Control logic
@@ -171,11 +218,13 @@ public class GraphMakerPanel extends GamePanel {
       if(mouse.doubleClicked) {
         String name = JOptionPane.showInputDialog("vertex name:");
         if(!graph.nodes.containsKey(name)) {
+          boolean wasFrozen = graph.layoutAlgorithm.isFrozen();
           node = graph.addNode(name);
           if(node != null) {
             node.x = mouseWorld.getX();
             node.y = mouseWorld.getY();
           }
+          graph.layoutAlgorithm.setFrozen(wasFrozen);
         }
       }
       
@@ -268,9 +317,12 @@ public class GraphMakerPanel extends GamePanel {
       graph.layoutAlgorithm = new BipartiteGraphLayout(startNodeID, 600, 40);
     }
     
+    if(keyboard.justPressed(KeyEvent.VK_C)) {
+      System.out.println(GraphSolver.containsCycles(graph));
+    }
     
     
-    graph.layoutAlgorithm.stepLayout(graph);
+    graph.stepLayout();
     
   }
   
