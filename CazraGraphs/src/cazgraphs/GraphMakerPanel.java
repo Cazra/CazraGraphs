@@ -16,6 +16,7 @@ import javax.swing.JOptionPane;
 
 import pwnee.*;
 import pwnee.text.BlitteredFont;
+import pwnee.text.Tooltip;
 
 import cazgraphs.graph.*;
 import cazgraphs.graph.layout.*;
@@ -24,6 +25,13 @@ import cazgraphs.graph.style.*;
 
 /** 
  * The core Pwnee2D visualization component for the example.
+ * This panel is part of an application using the CazGraphs framework
+ * that allows the user to construct graphs, lay them out in different ways,
+ * apply different coloring styles to them, and also run many kinds of 
+ * graph theory algorithms on them.
+ *
+ * This panel also serves as a sort of testing ground for new features to 
+ * the framework.
  */
 public class GraphMakerPanel extends GamePanel {
   
@@ -40,6 +48,8 @@ public class GraphMakerPanel extends GamePanel {
   public boolean showingSelectRect = false;
   public double selectRectLeft = 0;
   public double selectRectTop = 0;
+  
+  public Tooltip tooltip = new Tooltip(new Color(0xCCCCAA), new Color(0xFFFFCC), new Color(0x222222), 1000);
   
   /** A mapping of nodes being dragged to their drag offsets. */
   public Map<GNodeSprite, Point2D> draggedNodes = new HashMap<>();
@@ -292,6 +302,9 @@ public class GraphMakerPanel extends GamePanel {
       }
     }
     
+    // Tooltips
+    tooltip.updateComponent(node);
+    
     // node dragging
     if(mouse.justLeftClicked) {
       draggedNodes.clear();
@@ -365,6 +378,7 @@ public class GraphMakerPanel extends GamePanel {
       g2D.draw(rect);
     }
     
+    tooltip.render(g2D);
     
     // HUD text
     

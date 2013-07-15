@@ -10,12 +10,13 @@ import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeNode;
 
 import pwnee.sprites.Sprite;
+import pwnee.text.Tooltipable;
 
 
 /** 
  * A sprite for an individual node in a TreeSprite.
  */
-public class TNodeSprite extends Sprite {
+public class TNodeSprite extends Sprite implements Tooltipable {
   
   /** The tree this node belongs in. */
   public TreeSprite tree;
@@ -425,6 +426,23 @@ public class TNodeSprite extends Sprite {
       
       top += child.getSubtreeHeight() + tree.style.spacing;
     }
+  }
+  
+  
+  
+  
+  
+  //////// Tooltipable implementations.
+  public double getX() {
+    return getWorldCoordinates().getX();
+  }
+  
+  public double getY() {
+    return getWorldCoordinates().getY();
+  }
+  
+  public String getTooltipString() {
+    return label;
   }
 }
 

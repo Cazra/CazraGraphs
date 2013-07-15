@@ -9,6 +9,7 @@ import java.util.Set;
 
 import pwnee.*;
 import pwnee.sprites.Sprite;
+import pwnee.text.Tooltipable;
 
 import cazgraphs.graph.style.*;
 import cazgraphs.util.FontUtils;
@@ -17,7 +18,7 @@ import cazgraphs.util.FontUtils;
  * A sprite for representing a node in a GraphSprite.
  * Each node has a unique String ID (unique in its graph) 
  */
-public class GNodeSprite extends Sprite implements Comparable<GNodeSprite> {
+public class GNodeSprite extends Sprite implements Comparable<GNodeSprite>, Tooltipable {
   
   /** 
    * A unique ID for this node in its graph. This is set in the constructor 
@@ -272,6 +273,17 @@ public class GNodeSprite extends Sprite implements Comparable<GNodeSprite> {
   
   //////// Geometry
   
+  /** Returns the node's x position. (Used by Tooltipable) */
+  public double getX() {
+    return x;
+  }
+  
+  /** Returns the node's y position. (Used by Tooltipable) */
+  public double getY() {
+    return y;
+  }
+  
+  
   /** Return the rectangle that bounds the node's style shape. Returns null if this node is not visible. */
   public Rectangle2D getCollisionBox() {
     if(!isVisible) {
@@ -372,6 +384,11 @@ public class GNodeSprite extends Sprite implements Comparable<GNodeSprite> {
   
   
   //////// Misc
+  
+  /** Gets the string used to display a tooltip for this node. */
+  public String getTooltipString() {
+    return object.toString();
+  }
   
   public boolean isActive() {
     return (isVisible && opacity > 0.5);

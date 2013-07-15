@@ -102,7 +102,12 @@ public class TreeSprite extends Sprite {
   
   /** If the mouse is over a node in this tree, that node is returned. Else, null is returned. */
   public TNodeSprite getMouseOver(Point2D mousePt) {
-    return root.getMouseOver(mousePt);
+    if(root != null) {
+      return root.getMouseOver(mousePt);
+    }
+    else {
+      return null;
+    }
   }
   
   
