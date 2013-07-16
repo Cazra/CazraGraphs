@@ -400,7 +400,7 @@ public class TNodeSprite extends Sprite implements Tooltipable {
     g.translate(width, 0);
     g.scale(expandingScalar, expandingScalar);
     
-    double edgeWidth = getSubtreeHeight()*.25;
+    double edgeWidth = getEdgeWidth();
     double top = 0 - getSubtreeHeight()/2;
     
     for(TNodeSprite child : children) {
@@ -414,9 +414,7 @@ public class TNodeSprite extends Sprite implements Tooltipable {
       double endY = child.actualRelY;
       
       // draw the edge.
-      g.setColor(tree.style.strokeColor);
-      CubicCurve2D curve = new CubicCurve2D.Double(0, 0, endX*0.25, 0, endX*.75, endY, endX, endY);
-      g.draw(curve);
+      drawEdge(g, endX, endY);
       
       // render the child.
       AffineTransform origTrans = g.getTransform();
@@ -428,8 +426,17 @@ public class TNodeSprite extends Sprite implements Tooltipable {
     }
   }
   
+  /** Draws an edge from this node to one of its children, given that's child's position relative to this.. */
+  public void drawEdge(Graphics2D g, double endX, double endY) {
+    g.setColor(tree.style.strokeColor);
+    CubicCurve2D curve = new CubicCurve2D.Double(0, 0, endX*0.25, 0, endX*.75, endY, endX, endY);
+    g.draw(curve);
+  }
   
-  
+  /** The width of the edges between this node and its children. */
+  public double getEdgeWidth() {
+    return getSubtreeHeight() * 0.25;
+  }
   
   
   //////// Tooltipable implementations.
