@@ -96,7 +96,7 @@ public class GraphSolver {
     List<GNodeSprite> sources = new ArrayList<>();
     
     for(GNodeSprite node : graph.nodes.values()) {
-      if(node.inDegree() == 0) {
+      if(node.isSource()) {
         sources.add(node);
       }
     }
@@ -110,7 +110,7 @@ public class GraphSolver {
     List<GNodeSprite> sinks = new ArrayList<>();
     
     for(GNodeSprite node : graph.nodes.values()) {
-      if(node.outDegree() == 0) {
+      if(node.isSink()) {
         sinks.add(node);
       }
     }
@@ -432,6 +432,7 @@ public class GraphSolver {
     
     GraphSprite forest = new GraphSprite(true);
     forest.layoutAlgorithm = graph.layoutAlgorithm;
+    forest.style = new cazgraphs.graph.style.CyclicTreeGraphStyle();
     
     // Marks nodes as visited.
     // A node is marked 0 if its "subtree" is currently being explored.
@@ -443,7 +444,6 @@ public class GraphSolver {
     forest.vars[0] = 0;
     
     for(GNodeSprite root : roots) {
-      System.out.println(root);
       _convertToForest(forest, root, null, mark);
     }
     
@@ -454,8 +454,15 @@ public class GraphSolver {
     mark.put(cur, 0);
     
     // copy the node into the tree.
-    GNodeSprite treeNode = forest.addNode(cur.id + ";;" + forest.vars[0], cur.object);
-    forest.vars[0]++;
+    GNodeSprite treeNode;
+    if(forest.getNode(cur.id) == null) {
+      treeNode = forest.addNode(cur.id, cur.object);
+    }
+    else {
+      treeNode = forest.addNode(cur.id + ";dup" + forest.vars[0], cur.object);
+      forest.vars[0]++;
+    }
+    
     
     if(prev != null) {
       forest.addEdge(prev, treeNode);
@@ -466,11 +473,12 @@ public class GraphSolver {
         // explore the "subtree".
         _convertToForest(forest, next, treeNode, mark);
       }
-      else if(mark.get(next) == 0) {
+      else if(mark.get(next) == 0 || mark.get(next) == 2) {
         // A cycle! Copy the cycle node, but don't explore its children.
         mark.put(next, 2);
         
-        GNodeSprite cycleNode = forest.addNode(next.id + ";;" + forest.vars[0], next.object);
+        GNodeSprite cycleNode = new ReferenceGNodeSprite(forest.getNode(next.id));
+        forest.nodes.put(cycleNode.id, cycleNode);
         forest.vars[0]++;
         
         forest.addEdge(treeNode, cycleNode);
