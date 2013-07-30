@@ -403,7 +403,8 @@ public class GraphMakerPanel extends GamePanel {
     
     // display the mouse's world coordinates.
   //  Point2D mouseWorld = camera.screenToWorld(mouse.position);
-  //  g2D.drawString("Mouse world coordinates: (" + mouseWorld.getX() + ", " + mouseWorld.getY() + ")", 10, 47);
+    g2D.drawString("Contains cycles? : " + graph.hasCycles(), 10, 47);
+    g2D.drawString("Is a tree? : " + graph.isTree(), 10, 62);
   }
   
   

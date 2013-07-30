@@ -152,7 +152,15 @@ public class GraphSprite extends Sprite {
     return GraphSolver.findComponents(this);
   }
   
+  /** Returns true iff this graph contains any cycles. */
+  public boolean hasCycles() {
+    return GraphSolver.hasCycles(this);
+  }
   
+  /** Returns true iff this graph is a tree (or a forest of trees). */
+  public boolean isTree() {
+    return GraphSolver.isTree(this);
+  }
   
   //////// Layout
   
