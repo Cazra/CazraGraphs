@@ -209,15 +209,15 @@ public class GNodeSprite extends Sprite implements Comparable<GNodeSprite>, Tool
    * @return        This, for chaining.
    */
   public GNodeSprite removeEdge(String nID) {
-    GNodeSprite n = toEdges.remove(nID);
-    if(n == null) {
+    GNodeSprite next = toEdges.remove(nID);
+    if(next == null) {
       return this;
     }
     
-    n.fromEdges.remove(this.id);
+    next.fromEdges.remove(this.id);
     
     if(!graph.isDirected) {
-      n.removeEdge(this);
+      next.removeEdge(this);
     }
     return this;
   }
@@ -234,8 +234,14 @@ public class GNodeSprite extends Sprite implements Comparable<GNodeSprite>, Tool
    * @return    This, for chaining.
    */
   public GNodeSprite removeAllEdges() {
-    for(String nID : toEdges.keySet()) {
+    // remove all forward edges. 
+    for(String nID : new HashSet<String>(toEdges.keySet())) {
       removeEdge(nID);
+    }
+    
+    // remove all back edges.
+    for(GNodeSprite prev : new HashSet<GNodeSprite>(fromEdges.values())) {
+      prev.removeEdge(this.id);
     }
     return this;
   }

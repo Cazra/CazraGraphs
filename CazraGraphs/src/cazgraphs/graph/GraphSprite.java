@@ -106,6 +106,20 @@ public class GraphSprite extends Sprite {
   }
   
   
+  /** Removes a node from the graph. */
+  public void removeNode(String id) {
+    GNodeSprite node = nodes.get(id);
+    if(node != null) {
+      node.removeAllEdges();
+      nodes.remove(id);
+      layoutAlgorithm.setFrozen(false);
+    }
+  }
+  
+  public void removeNode(GNodeSprite node) {
+    removeNode(node.id);
+  }
+  
   /** Adds an edge from node id1 to node id2. */
   public void addEdge(String id1, String id2) {
     GNodeSprite node1 = nodes.get(id1);

@@ -8,7 +8,7 @@ import java.util.*;
  */
 public class GraphSolver {
   
-  /** Finds the connected components of a graph. */
+  /** Finds the connected components of a graph. Completes in O(n) time. */
   public static List<List<GNodeSprite>> findComponents(GraphSprite graph) {
     List<List<GNodeSprite>> components = new ArrayList<>();
     
@@ -44,7 +44,12 @@ public class GraphSolver {
   
   
   
-  /** Finds the roots of the connected components in a graph. */
+  /** 
+   * Finds the roots of the connected components in a graph. 
+   * If a component is a tree, then its source is returned.
+   * Otherwise, it is not guaranteed what node will be returned for the component. 
+   * Completes in O(n) time.
+   */
   public static List<GNodeSprite> findRoots(GraphSprite graph) {
     List<GNodeSprite> roots = new ArrayList<>();
     
@@ -52,11 +57,12 @@ public class GraphSolver {
     
     // Do a depth-first-search on each component to find the roots.
     for(List<GNodeSprite> component : components) {
-      // keep track of which which nodes have already been visited, along with their 
+      // Keep track of which which nodes have already been visited. 
+      // Our root nodes will sort of just bubble up as we eliminate visited nodes.
       Set<GNodeSprite> visited = new HashSet<>();
       GNodeSprite root = null;
       
-      for(GNodeSprite node : new ArrayList<GNodeSprite>(component)) {
+      for(GNodeSprite node : component) {
         if(visited.contains(node)) {
           continue;
         }
@@ -67,7 +73,6 @@ public class GraphSolver {
         while(!dfs.empty()) {
           GNodeSprite curNode = dfs.pop();
           if(!visited.contains(curNode)) {
-            component.add(curNode);
             visited.add(curNode);
             
             for(GNodeSprite other : curNode.getEdges()) {
@@ -86,10 +91,8 @@ public class GraphSolver {
   }
   
   
-  /** Returns the list of nodes reachable from a particular node. */
-  public static List<GNodeSprite> reachableNodes(GNodeSprite root) {
-    List<GNodeSprite> result = new ArrayList<>();
-  
+  /** Returns the list of nodes reachable from a particular node. Completes in O(n) time. */
+  public static List<GNodeSprite> reachableNodes(GNodeSprite root) {  
     Set<GNodeSprite> visited = new HashSet<>();
     Stack<GNodeSprite> dfs = new Stack<>();
     
@@ -98,7 +101,6 @@ public class GraphSolver {
       GNodeSprite node = dfs.pop();
       
       if(!visited.contains(node)) {
-        result.add(node);
         visited.add(node);
         
         for(GNodeSprite other : node.getEdges()) {
@@ -107,42 +109,7 @@ public class GraphSolver {
       }
     }
     
-    return result;
-  }
-  
-  
-  
-  /** Returns true iff the graph contains at least 1 cycle. */
-  public static boolean containsCycles(GraphSprite graph) {
-    Set<GNodeSprite> visited = new HashSet<>();
-    for(GNodeSprite node : graph.nodes.values()) {
-      
-      if(!visited.contains(node)) {
-        Set<GNodeSprite> visitedInComponent = new HashSet<>();
-        
-        Stack<GNodeSprite> dfs = new Stack<>();
-        dfs.push(node);
-        
-        while(!dfs.isEmpty()) {
-          GNodeSprite curNode = dfs.pop();
-          
-          if(!visited.contains(curNode)) {
-            visited.add(curNode);
-            visitedInComponent.add(curNode);
-            
-            for(GNodeSprite next : curNode.getEdges()) {
-              if(visitedInComponent.contains(next)) {
-                return true;
-              }
-              else {
-                dfs.push(next);
-              }
-            }
-          }
-        }
-      }
-    }
-    return false;
+    return new ArrayList<>(visited);
   }
   
   
@@ -153,6 +120,7 @@ public class GraphSolver {
    * Nodes that aren't reachable from the top node have a depth of null, 
    * the top node has a depth of 0, and all other nodes have a depth equal to 
    * their distance from the top node. 
+   * Completes in O(n) time.
    */
   public static Map<GNodeSprite, Integer> simpleTopology(GNodeSprite top) {
     Map<GNodeSprite, Integer> depths = new HashMap<>();
@@ -189,6 +157,7 @@ public class GraphSolver {
    * Nodes that aren't reachable from the bottom node have a depth of null, 
    * the bottom node has a depth of 0, and all other nodes have a depth equal to 
    * their distance from the bottom node. 
+   * Completes in O(n) time.
    */
   public static Map<GNodeSprite, Integer> simpleReverseTopology(GNodeSprite top) {
     Map<GNodeSprite, Integer> depths = new HashMap<>();
@@ -227,6 +196,7 @@ public class GraphSolver {
    * The third set is the set of odd-cycle vertices.
    * There may be multiple solutions to show a graph's bipartiteness. This 
    * algorithm only returns 1 solution though.
+   * Completes in O(n) time.
    */
   public static List<Set<GNodeSprite>> bicolorGraph(GraphSprite graph, String startNodeID) {
     List<Set<GNodeSprite>> result = new ArrayList<>();
@@ -259,10 +229,6 @@ public class GraphSolver {
     if(!visited.contains(node)) {
       bicolorPartial(graph, node, visited, result);
     }
-    
-//    List<GNodeSprite> vsorted = new ArrayList(visited);
-//    Collections.sort(vsorted);
-//    System.out.println(vsorted);
     
     return result;
   }
@@ -321,6 +287,108 @@ public class GraphSolver {
         }
       }
     }
+  }
+  
+  
+  
+  /** 
+   * Returns true iff any component has cycles. 
+   * Completes in O(n) time. 
+   */
+  public static boolean hasCycles(GraphSprite graph) {
+    if(graph.isDirected) {
+      // Nodes can be marked either 0 or 1. 
+      // 0 means that the node's descending paths are being explored. 
+      // 1 means that the node's descending paths have been completely 
+      // explorered and found to contain no cycles.
+      Map<GNodeSprite, Integer> mark = new HashMap<>();
+      
+      for(GNodeSprite first : graph.nodes.values()) {
+        if(!mark.containsKey(first)) {
+          if(_hasCyclesDirected(first, mark)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+    else {
+      return _hasCyclesUndirected(graph);
+    }
+  }
+  
+  /** 
+   * A directed graph has a cycle iff a depth-first search finds a back edge. 
+   * This is a bit more complicated than detecting a cycle in an undireceted graph. 
+   */
+  private static boolean _hasCyclesDirected(GNodeSprite cur, Map<GNodeSprite, Integer> mark) {
+    // Mark it 0 to show that we've visited the node, but we're still exploring 
+    // its descending paths.
+    mark.put(cur, 0);
+    
+    // explore the node's adjacency list.
+    for(GNodeSprite next : cur.getEdges()) {
+      if(!mark.containsKey(next) && _hasCyclesDirected(next, mark)) {
+        return true;
+      }
+      else if(mark.get(next) == 0) {
+        // We've revisited a node in a path currently being explored. 
+        // This means we've encountered a back-edge and therefore encountered 
+        // a cycle.
+        return true;
+      }
+    }
+    
+    // We've completely explored the node's adjacency list without encountering
+    // a back-edge. Mark it as 1.
+    mark.put(cur, 1);
+    return false;
+  }
+  
+  private static boolean _hasCyclesUndirected(GraphSprite graph) {
+    Set<GNodeSprite> visited = new HashSet<>();
+    
+    for(GNodeSprite source : graph.nodes.values()) {
+      if(!visited.contains(source)) {
+        
+        // do a depth first search from this node.
+        Stack<GNodeSprite> dfs = new Stack<>();
+        Stack<GNodeSprite> dfsPrev = new Stack<>();
+        dfs.push(source);
+        dfsPrev.push(new GNodeSprite(null, "dummy"));
+        
+        while(!dfs.isEmpty()) {
+          GNodeSprite cur = dfs.pop();
+          GNodeSprite prev = dfsPrev.pop();
+          
+          if(visited.contains(cur)) {
+            return true;
+          }
+          else {
+            visited.add(cur);
+            
+            // traverse our edges (except to the node that we came from).
+            for(GNodeSprite next : cur.getNeighbors()) {
+              if(next != prev) {
+                dfs.push(next);
+                dfsPrev.push(cur);
+              }
+            }
+          }
+        }
+      }
+    }
+    return false;
+  }
+  
+  
+  /** 
+   * Returns true iff no cycles exist in any component of our graph 
+   * if we treat it as an undirected graph. 
+   * Completes in O(n) time.
+   */
+  public static boolean isTree(GraphSprite graph) {
+    return !_hasCyclesUndirected(graph);
   }
 }
 

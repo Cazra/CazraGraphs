@@ -329,6 +329,16 @@ public class GraphMakerPanel extends GamePanel {
       showingSelectRect = false;
     }
     
+    // Deleting nodes
+    if(keyboard.justPressed(KeyEvent.VK_DELETE)) {
+      // delete all currently selected nodes.
+      for(GNodeSprite sprite : graph.selectedNodes) {
+        graph.removeNode(sprite);
+      }
+      graph.selectNode(null);
+    }
+    
+    
     graph.stepLayout();
     
   }
