@@ -91,6 +91,34 @@ public class GraphSolver {
   }
   
   
+  /** Finds all the source nodes in a graph. */
+  public static List<GNodeSprite> findSources(GraphSprite graph) {
+    List<GNodeSprite> sources = new ArrayList<>();
+    
+    for(GNodeSprite node : graph.nodes.values()) {
+      if(node.inDegree() == 0) {
+        sources.add(node);
+      }
+    }
+    
+    return sources;
+  }
+  
+  
+  /** Finds all the sink nodes in a graph. */
+  public static List<GNodeSprite> findSinks(GraphSprite graph) {
+    List<GNodeSprite> sinks = new ArrayList<>();
+    
+    for(GNodeSprite node : graph.nodes.values()) {
+      if(node.outDegree() == 0) {
+        sinks.add(node);
+      }
+    }
+    
+    return sinks;
+  }
+  
+  
   /** Returns the list of nodes reachable from a particular node. Completes in O(n) time. */
   public static List<GNodeSprite> reachableNodes(GNodeSprite root) {  
     Set<GNodeSprite> visited = new HashSet<>();
@@ -389,6 +417,70 @@ public class GraphSolver {
    */
   public static boolean isTree(GraphSprite graph) {
     return !_hasCyclesUndirected(graph);
+  }
+  
+  
+  
+  /** 
+   * Uses duplicate nodes to construct a tree representation of a graph that 
+   * is not necessarily a tree.
+   * Iff the graph is made of multiple components, then a forest of trees is produced.
+   */
+  public static GraphSprite convertToTree(GraphSprite graph) {
+    List<GNodeSprite> roots = findSources(graph);
+    int nodeNum = 0;
+    
+    GraphSprite forest = new GraphSprite(true);
+    forest.layoutAlgorithm = graph.layoutAlgorithm;
+    
+    // Marks nodes as visited.
+    // A node is marked 0 if its "subtree" is currently being explored.
+    // A node is marked 1 if its "subtree" has been completely explored without encountering a cycle.
+    // A node is marked 2 if it is encountered again in a cycle.
+    Map<GNodeSprite, Integer> mark = new HashMap<>();
+    
+    // The forest's var[0] will be used to produce unique IDs for the nodes to support duplicates.
+    forest.vars[0] = 0;
+    
+    for(GNodeSprite root : roots) {
+      System.out.println(root);
+      _convertToForest(forest, root, null, mark);
+    }
+    
+    return forest;
+  }
+  
+  private static void _convertToForest(GraphSprite forest, GNodeSprite cur, GNodeSprite prev, Map<GNodeSprite, Integer> mark) {
+    mark.put(cur, 0);
+    
+    // copy the node into the tree.
+    GNodeSprite treeNode = forest.addNode(cur.id + ";;" + forest.vars[0], cur.object);
+    forest.vars[0]++;
+    
+    if(prev != null) {
+      forest.addEdge(prev, treeNode);
+    }
+    
+    for(GNodeSprite next : cur.getEdges()) {
+      if(!mark.containsKey(next) || mark.get(next) == 1) {
+        // explore the "subtree".
+        _convertToForest(forest, next, treeNode, mark);
+      }
+      else if(mark.get(next) == 0) {
+        // A cycle! Copy the cycle node, but don't explore its children.
+        mark.put(next, 2);
+        
+        GNodeSprite cycleNode = forest.addNode(next.id + ";;" + forest.vars[0], next.object);
+        forest.vars[0]++;
+        
+        forest.addEdge(treeNode, cycleNode);
+      }
+    }
+    
+    // mark the path as safe.
+    if(mark.get(cur) != 2) {
+      mark.put(cur, 1);
+    }
   }
 }
 

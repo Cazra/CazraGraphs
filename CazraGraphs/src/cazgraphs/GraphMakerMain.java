@@ -89,6 +89,9 @@ class GraphMakerMenuBar extends JMenuBar implements ActionListener {
     public JRadioButtonMenuItem styleAncestryItem = new JRadioButtonMenuItem("Ancestry");
     public JRadioButtonMenuItem styleBipartiteItem = new JRadioButtonMenuItem("Bipartite");
   
+  public JMenu algsMenu = new JMenu("algorithms");
+    public JMenuItem toTreeItem = new JMenuItem("Convert to tree");
+  
   public GraphMakerMenuBar() {
     super();
     init();
@@ -160,6 +163,12 @@ class GraphMakerMenuBar extends JMenuBar implements ActionListener {
     styleBipartiteItem.addActionListener(this);
     
     styleNoneItem.setSelected(true);
+    
+    
+    this.add(algsMenu);
+    
+    algsMenu.add(toTreeItem);
+    toTreeItem.addActionListener(this);
   }
   
   
@@ -300,6 +309,16 @@ class GraphMakerMenuBar extends JMenuBar implements ActionListener {
       BipartiteGraphStyle bStyle = new BipartiteGraphStyle();
       graph.style = bStyle;
       bStyle.computeBipartiteness(graph, startNodeID);
+    }
+    
+    
+    
+    // Algoritms menu
+    if(e.getSource() == toTreeItem) {
+      GraphSprite forest = GraphSolver.convertToTree(GraphMakerMain.instance.graphPanel.graph);
+      GraphMakerMain.instance.graphPanel.reset();
+      GraphMakerMain.instance.graphPanel.graph = forest;
+      styleNoneItem.setSelected(true);
     }
   }
 }
