@@ -42,6 +42,8 @@ public class GNodeSprite extends Sprite implements Comparable<GNodeSprite>, Tool
    */
   public Map<String, GNodeSprite> toEdges = new HashMap<>();
   
+  public Map<String, String> edgeLabels = new HashMap<>();
+  
   /** 
    * This node's inward edges (coming from other nodes). 
    * Pleaes don't add or remove edges directly from this map. 
@@ -200,6 +202,11 @@ public class GNodeSprite extends Sprite implements Comparable<GNodeSprite>, Tool
       this.fromEdges.put(n.id, n);
     }
     return this;
+  }
+  
+  public GNodeSprite addEdge(GNodeSprite n, String label) {
+    edgeLabels.put(n.id, label);
+    return addEdge(n);
   }
   
   
@@ -373,6 +380,8 @@ public class GNodeSprite extends Sprite implements Comparable<GNodeSprite>, Tool
     if(other == null || !other.isVisible) {
       return;
     }
+    
+    edgeStyle.setLabel(edgeLabels.get(other.id));
     
     String edgeKey = "";
     if(this.id.compareTo(other.id) < 0) {

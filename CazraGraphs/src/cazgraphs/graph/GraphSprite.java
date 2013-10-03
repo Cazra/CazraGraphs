@@ -131,11 +131,23 @@ public class GraphSprite extends Sprite {
     layoutAlgorithm.setFrozen(false);
   }
   
+  public void addEdge(String id1, String id2, String label) {
+    GNodeSprite node1 = nodes.get(id1);
+    GNodeSprite node2 = nodes.get(id2);
+    
+    if(node1 != null && node2 != null) {
+      node1.addEdge(node2, label);
+    }
+    layoutAlgorithm.setFrozen(false);
+  }
   
   public void addEdge(GNodeSprite n1, GNodeSprite n2) {
     addEdge(n1.id, n2.id);
   }
   
+  public void addEdge(GNodeSprite n1, GNodeSprite n2, String label) {
+    addEdge(n1.id, n2.id, label);
+  }
   
   /** 
    * Returns a list of all the root nodes for components in the graph. 
