@@ -24,7 +24,7 @@ public class DiamondNodeStyle extends NodeStyle {
       trans.rotate(Math.PI/4); // concatenate rotate to unit square.
       trans.scale(1/w, 1/h); // concatenate scale to unit diamond.
       
-      trans.concatenate(node.curTrans.createInverse());
+      trans.concatenate(node.getTransform().createInverse());
       Point2D transP = trans.transform(p, null);
       
       double r = 1/Math.sqrt(2)/2;

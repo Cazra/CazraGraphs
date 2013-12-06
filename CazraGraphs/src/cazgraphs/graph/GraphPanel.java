@@ -130,12 +130,12 @@ public class GraphPanel extends GamePanel {
         
         if(style.topology != null) {
           for(GNodeSprite sprite : graph.nodes.values()) {
-            sprite.isVisible = style.topology.containsKey(sprite);
+            sprite.setVisible(style.topology.containsKey(sprite));
           } 
         }
         else {
           for(GNodeSprite sprite : graph.nodes.values()) {
-            sprite.isVisible = true;
+            sprite.setVisible(true);
           } 
         }
       }
@@ -145,12 +145,12 @@ public class GraphPanel extends GamePanel {
         
         if(style.descendants != null) {
           for(GNodeSprite sprite : graph.nodes.values()) {
-            sprite.isVisible = (style.descendants.containsKey(sprite) || style.ancestors.containsKey(sprite));
+            sprite.setVisible(style.descendants.containsKey(sprite) || style.ancestors.containsKey(sprite));
           } 
         }
         else {
           for(GNodeSprite sprite : graph.nodes.values()) {
-            sprite.isVisible = true;
+            sprite.setVisible(true);
           } 
         }
       }

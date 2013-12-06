@@ -440,17 +440,17 @@ public class GraphSolver {
     // A node is marked 2 if it is encountered again in a cycle.
     Map<GNodeSprite, Integer> mark = new HashMap<>();
     
-    // The forest's var[0] will be used to produce unique IDs for the nodes to support duplicates.
-    forest.vars[0] = 0;
+    // We'll pass an integer by reference to produce unique IDs for duplicate nodes.
+    IntPointer dupID = new IntPointer(0);
     
     for(GNodeSprite root : roots) {
-      _convertToForest(forest, root, null, mark);
+      _convertToForest(forest, root, null, mark, dupID);
     }
     
     return forest;
   }
   
-  private static void _convertToForest(GraphSprite forest, GNodeSprite cur, GNodeSprite prev, Map<GNodeSprite, Integer> mark) {
+  private static void _convertToForest(GraphSprite forest, GNodeSprite cur, GNodeSprite prev, Map<GNodeSprite, Integer> mark, IntPointer dupID) {
     mark.put(cur, 0);
     
     // copy the node into the tree.
@@ -459,8 +459,8 @@ public class GraphSolver {
       treeNode = forest.addNode(cur.id, cur.object);
     }
     else {
-      treeNode = forest.addNode(cur.id + ";dup" + forest.vars[0], cur.object);
-      forest.vars[0]++;
+      treeNode = forest.addNode(cur.id + ";dup" + dupID.value, cur.object);
+      dupID.value++;
     }
     
     
@@ -471,7 +471,7 @@ public class GraphSolver {
     for(GNodeSprite next : cur.getEdges()) {
       if(!mark.containsKey(next) || mark.get(next) == 1) {
         // explore the "subtree".
-        _convertToForest(forest, next, treeNode, mark);
+        _convertToForest(forest, next, treeNode, mark, dupID);
       }
       else if(mark.get(next) == 0 || mark.get(next) == 2) {
         // A cycle! Copy the cycle node, but don't explore its children.
@@ -479,7 +479,7 @@ public class GraphSolver {
         
         GNodeSprite cycleNode = new ReferenceGNodeSprite(forest.getNode(next.id));
         forest.nodes.put(cycleNode.id, cycleNode);
-        forest.vars[0]++;
+        dupID.value++;
         
         forest.addEdge(treeNode, cycleNode);
       }
@@ -488,6 +488,18 @@ public class GraphSolver {
     // mark the path as safe.
     if(mark.get(cur) != 2) {
       mark.put(cur, 1);
+    }
+  }
+  
+  
+  /** 
+   * An object used to pass an integer by reference. 
+   */
+  private static class IntPointer {
+    int value;
+    
+    public IntPointer(int value) {
+      this.value = value;
     }
   }
 }

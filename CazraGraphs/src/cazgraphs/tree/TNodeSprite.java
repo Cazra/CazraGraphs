@@ -256,7 +256,7 @@ public class TNodeSprite extends Sprite implements Tooltipable {
   /** Converts a point from screen to node coordinates. */
   public Point2D screen2Node(Point2D screenP) {
     try {
-      return curTrans.createInverse().transform(screenP, null);
+      return getTransform().createInverse().transform(screenP, null);
     }
     catch(Exception e) {
       return screenP;

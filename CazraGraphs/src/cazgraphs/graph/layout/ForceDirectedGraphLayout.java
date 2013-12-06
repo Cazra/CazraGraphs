@@ -227,6 +227,6 @@ public class ForceDirectedGraphLayout extends GraphLayout {
   
   
   private boolean isNodeActive(GNodeSprite node) {
-    return (node.isVisible && node.opacity > 0.5);
+    return (node.isVisible() && node.getOpacity() > 0.5);
   }
 }

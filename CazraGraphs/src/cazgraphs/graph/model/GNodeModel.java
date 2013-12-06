@@ -180,7 +180,7 @@ public class GNodeModel implements Comparable<GNodeModel> {
   
   /** 
    * Removes an edge from this node. 
-   * @param nID     The id of neighbor being removed.
+   * @param otherID     The id of neighbor being removed.
    * @return        This, for chaining.
    */
   public GNodeModel removeEdge(String otherID) {

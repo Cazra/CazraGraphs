@@ -18,7 +18,7 @@ public class RectangleNodeStyle extends NodeStyle {
       double rx = dims.getWidth()/2;
       double ry = dims.getHeight()/2;
       
-      Point2D transP = node.curTrans.createInverse().transform(p, null);
+      Point2D transP = node.getTransform().createInverse().transform(p, null);
       
       return (transP.getX() >= 0-rx && transP.getX() <= rx && transP.getY() >= 0-ry && transP.getY() <= ry);
     }

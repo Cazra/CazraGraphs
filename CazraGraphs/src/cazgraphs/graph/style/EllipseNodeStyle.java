@@ -20,7 +20,7 @@ public class EllipseNodeStyle extends NodeStyle {
       
       // apply a scale to compress our geometry so that the ellipse is a unit circle.
       AffineTransform scale = AffineTransform.getScaleInstance(1/rx, 1/ry);
-      scale.concatenate(node.curTrans.createInverse());
+      scale.concatenate(node.getTransform().createInverse());
       Point2D transP = scale.transform(p, null);
       
     //  System.out.println(node + " " + transP);
