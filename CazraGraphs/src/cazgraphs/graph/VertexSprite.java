@@ -2,6 +2,7 @@ package cazgraphs.graph;
 
 import java.awt.*;
 import java.awt.geom.*;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -35,7 +36,7 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
   private GraphSprite graph;
   
   /** The labels for this vertex's forward edges. */
-  public Map<String, String> edgeLabels = new HashMap<>();
+  private Map<String, String> edgeLabels = new HashMap<>();
   
   
   /** The physical properties associated with this vertex for computing the graph layout. */
@@ -45,7 +46,15 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
   /** Whether this node is currently selected. */
   private boolean isSelected = false;
   
-    
+  /** Parent vertex this vertex is nested under, for expandable graphs. */
+  private VertexSprite parent = null;
+  
+  /** Set of nested vertex sprites, for expandable graphs. */
+  private Set<VertexSprite> children = new HashSet<>();
+  
+  /** Whether this sprite is expanded to reveal nested sprites. */
+  private boolean isExpanded = true;
+  
   /**
    * Creates a vertex sprite at the origin repesenting the vertex in the graph 
    * with the specified ID.
@@ -158,12 +167,21 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
   
   
   /** 
+   * Returns the text label for the edge from this vertex to the one with the 
+   * specified ID. 
+   */
+  public String getEdgeLabel(String otherID) {
+    return edgeLabels.get(otherID);
+  }
+  
+  
+  /** 
    * Sets the text label for an edge from this node to the node with the 
    * specified ID.
    */
   public void setEdgeLabel(String otherID, String label) {
     if(otherID == null) {
-      throw new CazgraphException(otherID + ": Cannot label edge to null.");
+      throw new CazgraphException("Cannot label null edge: " + otherID);
     }
     
     if(graph.hasEdge(this.id, otherID)) {
@@ -223,6 +241,83 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
   
   
   
+  //////// Nested sprites
+  
+  /** Returns true iff this sprite and its ancestors are expanded. */
+  public boolean isExpanded() {
+    return isExpanded && (parent == null || parent.isExpanded());
+  }
+  
+  /** Set whether this sprite is expanded. */
+  public void setExpanded(boolean isExpanded) {
+    this.isExpanded = isExpanded;
+  }
+  
+  /** 
+   * Gets the sprite this one is nested under. Returns null if this sprite is 
+   * at the top of the nesting chain. 
+   */
+  public VertexSprite getParent() {
+    return parent;
+  }
+  
+  /** Nests a sprite below this one. */
+  public void addChild(VertexSprite v) {
+    if(v.parent != null) {
+      v.parent.removeChild(v);
+    }
+    
+    v.parent = this;
+    this.children.add(v);
+  }
+  
+  /** Nests a set of sprites below this one. */
+  public void addChildren(Collection<VertexSprite> set) {
+    for(VertexSprite v : set) {
+      addChild(v);
+    }
+  }
+  
+  /** Unnests a sprite below this one. */
+  public void removeChild(VertexSprite v) {
+    if(children.contains(v)) {
+      v.parent = null;
+      this.children.remove(v);
+    }
+  }
+  
+  /** Unnests a set of sprites below this one. */
+  public void removeChildren(Collection<VertexSprite> set) {
+    for(VertexSprite v : set) {
+      removeChild(v);
+    }
+  }
+  
+  /** Unnests all sprites below this one. */
+  public void clearChildren() {
+    for(VertexSprite v : children) {
+      v.parent = null;
+    }
+    children.clear();
+  }
+  
+  /** 
+   * Returns the first visible vertex at or above this vertex in the  
+   * nesting chain. Returns null if one can't be found.
+   */
+  public VertexSprite getFirstVisible() {
+    VertexSprite v = this;
+    while(v != null) {
+      if(v.isVisible()) {
+        break;
+      }
+      
+      v = v.parent;
+    }
+    return v;
+  }
+  
+  
   //////// Geometry
   
   /** Returns the node's x position. (Used by Tooltipable) */
@@ -238,7 +333,7 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
   
   /** Return the rectangle that bounds the node's style shape. Returns null if this node is not visible. */
   public Rectangle2D getCollisionBox() {
-    if(!isVisible) {
+    if(!isVisible()) {
       return null;
     }
     Dimension2D dims = getDimensions();
@@ -248,7 +343,7 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
   
   /** Returns the dimensions of the bounding box for the shape drawn by this node's style. */
   public Dimension2D getDimensions() {
-    if(!isVisible) {
+    if(!isVisible()) {
       return new Dimension(0,0);
     }
     return getStyle().getDimensions(this);
@@ -260,7 +355,7 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
    * given in view coordinates.
    */
   public boolean containsPoint(Point2D p) {
-    if(!isVisible) {
+    if(!isVisible()) {
       return false;
     }
     return getStyle().containsPoint(p, this);
@@ -272,7 +367,7 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
    * direction (angle in degrees) from the node's center. 
    */
   public Point2D getPointOnShape(double angle) {
-    if(!isVisible) {
+    if(!isVisible()) {
       return new Point2D.Double(x,y);
     }
     return getStyle().getPointOnShape(angle, this);
@@ -313,8 +408,17 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
   
   //////// Rendering
   
+  public boolean isVisible() {
+    return isVisible && (parent == null || parent.isExpanded());
+  }
+  
+  
   /** Draws the node, but not the edges. */
   public void draw(Graphics2D g) {
+    if(!isVisible()) {
+      return;
+    }
+    
     g.setColor(new Color(0xAA0000));
     getStyle().draw(g, this);
     
@@ -332,7 +436,12 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
    * transform.
    */
   public void drawEdges(Graphics2D g, Set<String> drawnEdges) {
-    if(!isVisible) {
+    if(!isVisible()) {
+      VertexSprite visibleAncestor = getFirstVisible();
+      if(visibleAncestor != null) {
+        
+      }
+      
       return;
     }
   
@@ -343,12 +452,20 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
   
   
   /** Draws the edge between this node and another node if the edge hasn't been drawn yet. */
-  public void drawEdge(Graphics2D g, Set<String> drawnEdges, String otherID) {
+  private void drawEdge(Graphics2D g, Set<String> drawnEdges, String otherID) {
     
     VertexSprite other = graph.getSprite(otherID);
-    if(other == null || !other.isVisible) {
+    if(other == null) {
+      return;
+    } 
+    else if(!other.isVisible()) {
+    //  VertexSprite visibleAncestor = other.getFirstVisible();
+    //  if(visibleAncestor != null) {
+    //    drawEdge(g, drawnEdges, visibleAncestor.getID());
+    //  }
       return;
     }
+    
     
     String edgeKey = graph.getEdgeID(this.id, otherID);
     
@@ -375,7 +492,7 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
   }
   
   public boolean isActive() {
-    return (isVisible && opacity > 0.5);
+    return (isVisible() && opacity > 0.5);
   }
   
   public String toString() {

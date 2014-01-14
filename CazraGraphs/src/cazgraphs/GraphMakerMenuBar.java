@@ -432,18 +432,32 @@ public class GraphMakerMenuBar extends JMenuBar {
           GraphSprite oldSprite = GraphMakerMain.instance.graphPanel.graph;
           DirectedGraph forest = GraphSolver.convertToTree(oldSprite.getGraph());
           
-          GraphSprite sprite = new GraphSprite(forest);
-          sprite.setLayout(oldSprite.getLayout());
-          sprite.setStyle(new CyclicTreeGraphStyle());
+          GraphSprite treeSprite = new GraphSprite(forest);
+          treeSprite.setLayout(oldSprite.getLayout());
+          treeSprite.setStyle(new CyclicTreeGraphStyle());
           
+          // Nest the vertices under any noots. 
+          for(String rootID : treeSprite.findRoots()) {
+            _treeNest(treeSprite.getSprite(rootID), 1);
+          }
           
           GraphMakerMain.instance.graphPanel.reset();
-          GraphMakerMain.instance.graphPanel.graph = sprite;
+          GraphMakerMain.instance.graphPanel.graph = treeSprite;
           styleNoneItem.setSelected(true);
         }
       });
     }
     return toTreeItem;
+  }
+  
+  
+  private void _treeNest(VertexSprite v, int depth) {
+    for(String toID : v.getEdges()) {
+      VertexSprite other = v.getGraph().getSprite(toID);
+      v.addChild(other);
+      v.setEdgeLabel(toID, "" + depth);
+      _treeNest(other, depth + 1);
+    }
   }
   
   

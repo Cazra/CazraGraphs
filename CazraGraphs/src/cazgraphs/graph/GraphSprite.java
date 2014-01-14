@@ -123,7 +123,8 @@ public class GraphSprite extends Sprite {
   public void removeVertex(String id) {
     graph.removeVertex(id);
     
-    vertexSprites.remove(id);
+    VertexSprite sprite = vertexSprites.remove(id);
+    sprite.clearChildren();
     
     layoutAlgorithm.setPaused(false);
   }

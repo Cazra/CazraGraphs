@@ -301,6 +301,9 @@ public class GraphMakerPanel extends GamePanel {
           
           graph.setLayout(new BipartiteGraphLayout(node.getID(), hspace, vspace));
         }
+        else {
+          node.setExpanded(!node.isExpanded());
+        }
       }
     }
     
