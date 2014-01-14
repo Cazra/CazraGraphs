@@ -8,7 +8,7 @@ import pwnee.*;
 import cazgraphs.graph.*;
 
 /** A node rendering style which draws the node as an ellipse with its center at the node's origin. */
-public class DiamondNodeStyle extends NodeStyle {
+public class DiamondVertexStyle extends VertexStyle {
   
   
   public boolean containsPoint(Point2D p, VertexSprite node) {

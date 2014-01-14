@@ -20,7 +20,7 @@ public class RandomGraphFactory {
   
   public static GraphSprite randomGraph(int numNodes, double connectivity, GraphLayout layout) {
     GraphSprite graph = new GraphSprite();
-    graph.layoutAlgorithm = layout;
+    graph.setLayout(layout);
     
     // produce the nodes.
     int nodesMade = 0;
@@ -35,17 +35,6 @@ public class RandomGraphFactory {
       usedNames.add(name);
       VertexSprite node = graph.addVertex(name);
       
-      // random style
-      /*
-      int shapeIndex = GameMath.rand.nextInt(3);
-      if(shapeIndex == 1) {
-        node.style = new RectangleNodeStyle();
-      }
-      else if(shapeIndex == 2) {
-        node.style = new DiamondNodeStyle();
-      }*/
-      
-      node.style = new EllipseNodeStyle();
     }
     
     // randomly produce the edges.
@@ -68,42 +57,42 @@ public class RandomGraphFactory {
   /** Produces a random node name. */
   public static String randomNodeName() {
     List<String> names = new ArrayList<>();
-    names.add("a node");
-    names.add("my node");
-    names.add("suddenly node");
-    names.add("node basket");
-    names.add("nodelicious");
-    names.add("I am a node");
-    names.add("killer node");
-    names.add("hello node");
-    names.add("my little node");
-    names.add("lonely node");
-    names.add("node again");
-    names.add("warm node");
-    names.add("sleepy node");
-    names.add("fuzzy node");
-    names.add("all of the node");
-    names.add("senor node");
-    names.add("node sensei");
-    names.add("boss node");
-    names.add("mini node");
-    names.add("node around");
-    names.add("node!");
-    names.add("fiendish node");
-    names.add("fishy node");
-    names.add("nodes alive");
-    names.add("I are node");
-    names.add("botcy");
-    names.add("cutie node");
-    names.add("node forever");
-    names.add("noderon");
-    names.add("mr node");
-    names.add("ms node");
-    names.add("prof node");
-    names.add("mi amore, node");
-    names.add("node4sale");
-    names.add("nodes r us");
-    names.add("can you node?");
+    names.add("a vertex");
+    names.add("my vertex");
+    names.add("suddenly vertex");
+    names.add("vertex basket");
+    names.add("vertexlicious");
+    names.add("I am a vertex");
+    names.add("killer vertex");
+    names.add("hello vertex");
+    names.add("my little vertex");
+    names.add("lonely vertex");
+    names.add("vertex again");
+    names.add("warm vertex");
+    names.add("sleepy vertex");
+    names.add("fuzzy vertex");
+    names.add("all of the vertex");
+    names.add("senor vertex");
+    names.add("vertex sensei");
+    names.add("boss vertex");
+    names.add("mini vertex");
+    names.add("vertex around");
+    names.add("vertex!");
+    names.add("fiendish vertex");
+    names.add("fishy vertex");
+    names.add("vertexs alive");
+    names.add("I are vertex");
+    names.add("xetrev");
+    names.add("cutie vertex");
+    names.add("vertex forever");
+    names.add("vertexron");
+    names.add("mr vertex");
+    names.add("ms vertex");
+    names.add("prof vertex");
+    names.add("mi amore, vertex");
+    names.add("vertex4sale");
+    names.add("vertexs r us");
+    names.add("can you vertex?");
     names.add("cat planet!");
     
     return names.get(GameMath.rand.nextInt(names.size()));

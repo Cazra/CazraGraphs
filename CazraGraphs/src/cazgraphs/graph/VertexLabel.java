@@ -70,7 +70,7 @@ public class VertexLabel {
   }
   
   
-  
+  /** Returns the dimensions of the label. */
   public Dimension2D getDimensions() {
     return new Dimension((int) width + graph.getStyle().padding*2, (int) height + graph.getStyle().padding*2);
   }

@@ -131,7 +131,7 @@ public class GraphMakerPanel extends GamePanel {
       JOptionPane.showMessageDialog(this, "Could not read graph from file: " + filepath);
       e.printStackTrace();
     }
-    graph.layoutAlgorithm = new ForceDirectedGraphLayout();
+    graph.setLayout(new ForceDirectedGraphLayout());
   }
   
   
@@ -217,13 +217,13 @@ public class GraphMakerPanel extends GamePanel {
       if(mouse.doubleClicked) {
         String name = JOptionPane.showInputDialog("vertex name:");
         if(name != null && !graph.hasVertex(name)) {
-          boolean wasFrozen = graph.layoutAlgorithm.isFrozen();
+          boolean wasPaused = graph.getLayout().isPaused();
           node = graph.addVertex(name);
           if(node != null) {
             node.x = mouseWorld.getX();
             node.y = mouseWorld.getY();
           }
-          graph.layoutAlgorithm.setFrozen(wasFrozen);
+          graph.getLayout().setPaused(wasPaused);
         }
       }
       
@@ -293,13 +293,13 @@ public class GraphMakerPanel extends GamePanel {
           
           int hspace = 600;
           int vspace = 40;
-          if(graph.layoutAlgorithm instanceof BipartiteGraphLayout) {
-            BipartiteGraphLayout layout = (BipartiteGraphLayout) graph.layoutAlgorithm;
+          if(graph.getLayout() instanceof BipartiteGraphLayout) {
+            BipartiteGraphLayout layout = (BipartiteGraphLayout) graph.getLayout();
             hspace = layout.hspacing;
             vspace = layout.vspacing;
           }
           
-          graph.layoutAlgorithm = new BipartiteGraphLayout(node.getID(), hspace, vspace);
+          graph.setLayout(new BipartiteGraphLayout(node.getID(), hspace, vspace));
         }
       }
     }

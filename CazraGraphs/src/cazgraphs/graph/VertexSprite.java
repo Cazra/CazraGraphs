@@ -12,6 +12,7 @@ import pwnee.sprites.Sprite;
 import pwnee.text.Tooltipable;
 
 import cazgraphs.CazgraphException;
+import cazgraphs.graph.layout.LayoutPhysics;
 import cazgraphs.graph.style.*;
 import cazgraphs.util.FontUtils;
 
@@ -37,26 +38,8 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
   public Map<String, String> edgeLabels = new HashMap<>();
   
   
-  /** 
-   * The node's current velocity along the x-axis, for the convenience
-   * of layout algorithms.
-   */
-  public double dx = 0;
-  
-  /** 
-   * The node's current velocity along the y-axis, for the convenience
-   * of layout algorithms.
-   */
-  public double dy = 0;
-   
-  /** 
-   * The node's mass, for the convenience of layout algorithms.
-   */
-  public double mass = 1;
-  
-  
-  /** The style used to render the node's shape and calculate collisions. */
-  public NodeStyle style = new EllipseNodeStyle();
+  /** The physical properties associated with this vertex for computing the graph layout. */
+  private LayoutPhysics physics = null;
   
   
   /** Whether this node is currently selected. */
@@ -64,13 +47,14 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
   
     
   /**
-   * Creates a vertex at the origin.
+   * Creates a vertex sprite at the origin repesenting the vertex in the graph 
+   * with the specified ID.
    */
   public VertexSprite(GraphSprite g, String id) {
     super(0,0);
     this.graph = g;
     this.id = id;
-    this.setObject(g.getObject(id));
+    this.label = new VertexLabel(g, g.getObject(id));
   }
   
   
@@ -107,7 +91,6 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
   public void setObject(Object obj) {
     graph.setObject(this.id, obj);
     this.label = new VertexLabel(graph, obj);
-    this.mass = Math.max(1,label.width * label.height /(32*32));
   }
   
   
@@ -268,7 +251,7 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
     if(!isVisible) {
       return new Dimension(0,0);
     }
-    return style.getDimensions(this);
+    return getStyle().getDimensions(this);
   }
   
   
@@ -280,7 +263,7 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
     if(!isVisible) {
       return false;
     }
-    return style.containsPoint(p, this);
+    return getStyle().containsPoint(p, this);
   }
   
   
@@ -292,7 +275,25 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
     if(!isVisible) {
       return new Point2D.Double(x,y);
     }
-    return style.getPointOnShape(angle, this);
+    return getStyle().getPointOnShape(angle, this);
+  }
+  
+  
+  //////// Layout physics
+  
+  /** Sets the layout physics object for this vertex. */
+  public void setPhysics(LayoutPhysics physics) {
+    this.physics = physics;
+  }
+  
+  /** Returns the value of some physics property of this vertex. */
+  public double getPhysicsProp(int code) {
+    return physics.getProp(code);
+  }
+  
+  /** Sets the value of some physics property of this vertex. */
+  public void setPhysicsProp(int code, double value) {
+    physics.setProp(code, value);
   }
   
   
@@ -315,9 +316,10 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
   /** Draws the node, but not the edges. */
   public void draw(Graphics2D g) {
     g.setColor(new Color(0xAA0000));
-    style.draw(g, this);
+    getStyle().draw(g, this);
     
-    if(graph.camera != null && graph.camera.zoom <= 1.0/12) {
+    Camera camera = graph.getStyle().camera;
+    if(camera != null && camera.zoom <= 1.0/12) {
       return;
     }
     label.draw(g);
@@ -351,7 +353,7 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
     String edgeKey = graph.getEdgeID(this.id, otherID);
     
     if(!drawnEdges.contains(edgeKey)) {
-      EdgeStyle edgeStyle = getEdgeStyle(otherID);
+      EdgeStyle edgeStyle = graph.getStyle().getEdgeStyle(this, other);
       edgeStyle.setLabel(edgeLabels.get(otherID));
       
       drawnEdges.add(edgeKey);
@@ -359,17 +361,10 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
     }
   }
   
-  
-  
-  /** 
-   * Returns the appropriate EdgeStyle with which to render the edge from 
-   * this node to another node specified by ID.
-   */
-  public EdgeStyle getEdgeStyle(String toID) {
-    // The default implementation returns the default edgestyle for the graph.
-    return graph.getDefaultEdgeStyle();
+  /** Returns the VertexStyle being used to render this vertex. */
+  public VertexStyle getStyle() {
+    return graph.getStyle().getVertexStyle(this);
   }
-  
   
   
   //////// Misc

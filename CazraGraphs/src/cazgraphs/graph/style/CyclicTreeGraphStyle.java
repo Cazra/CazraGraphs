@@ -22,7 +22,7 @@ public class CyclicTreeGraphStyle extends GraphStyle {
   }
   
 
-  public Color getNodeStrokeColor(VertexSprite node) {
+  public Color getVertexStrokeColor(VertexSprite node) {
     if(node.isSelected()) {
       return selectedStrokeColor;
     }
@@ -35,7 +35,7 @@ public class CyclicTreeGraphStyle extends GraphStyle {
   }
   
 
-  public Color getNodeFillColor(VertexSprite node) {
+  public Color getVertexFillColor(VertexSprite node) {
     if(node.isSelected()) {
       return selectedFillColor;
     }

@@ -222,7 +222,7 @@ public class GraphMakerMenuBar extends JMenuBar {
       layoutNoneItem.addActionListener(new ActionListener() {
         
         public void actionPerformed(ActionEvent e) {
-          GraphMakerMain.instance.graphPanel.graph.layoutAlgorithm = new DefaultGraphLayout();
+          GraphMakerMain.instance.graphPanel.graph.setLayout(new DefaultGraphLayout());
         }
       });
     }
@@ -238,12 +238,7 @@ public class GraphMakerMenuBar extends JMenuBar {
       layoutForceItem.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
           ForceDirectedGraphLayout layout = new ForceDirectedGraphLayout();
-          GraphMakerMain.instance.graphPanel.graph.layoutAlgorithm = layout;
-          
-          for(VertexSprite node : GraphMakerMain.instance.graphPanel.graph.getSprites()) {
-            node.dx = 0;
-            node.dy = 0;
-          }
+          GraphMakerMain.instance.graphPanel.graph.setLayout(layout);
           
           try {
             layout.ANTIGRAV *= Double.parseDouble(JOptionPane.showInputDialog("antigravity scale:"));
@@ -267,7 +262,7 @@ public class GraphMakerMenuBar extends JMenuBar {
       layoutCircleItem.addActionListener(new ActionListener() {
         
         public void actionPerformed(ActionEvent e) {
-          GraphMakerMain.instance.graphPanel.graph.layoutAlgorithm = new NGonGraphLayout();
+          GraphMakerMain.instance.graphPanel.graph.setLayout(new NGonGraphLayout());
         }
         
       });
@@ -296,7 +291,7 @@ public class GraphMakerMenuBar extends JMenuBar {
             BipartiteGraphStyle style = new BipartiteGraphStyle();
             graph.setStyle(style);
             style.computeBipartiteness(graph, startNodeID);
-            graph.layoutAlgorithm = new BipartiteGraphLayout(startNodeID, hspace, vspace);
+            graph.setLayout(new BipartiteGraphLayout(startNodeID, hspace, vspace));
             
             styleBipartiteItem.setSelected(true);
           }
@@ -438,7 +433,7 @@ public class GraphMakerMenuBar extends JMenuBar {
           DirectedGraph forest = GraphSolver.convertToTree(oldSprite.getGraph());
           
           GraphSprite sprite = new GraphSprite(forest);
-          sprite.layoutAlgorithm = oldSprite.layoutAlgorithm;
+          sprite.setLayout(oldSprite.getLayout());
           sprite.setStyle(new CyclicTreeGraphStyle());
           
           

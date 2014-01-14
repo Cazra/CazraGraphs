@@ -69,9 +69,9 @@ public class PartitionGraphStyle extends GraphStyle {
   
   
   
-  public Color getNodeStrokeColor(VertexSprite node) {
+  public Color getVertexStrokeColor(VertexSprite node) {
     if(node.isSelected()) {
-      return super.getNodeStrokeColor(node);
+      return super.getVertexStrokeColor(node);
     }
     else {
       Integer group = groupMap.get(node.getID());
@@ -84,9 +84,9 @@ public class PartitionGraphStyle extends GraphStyle {
   }
   
   
-  public Color getNodeFillColor(VertexSprite node) {
+  public Color getVertexFillColor(VertexSprite node) {
     if(node.isSelected()) {
-      return super.getNodeFillColor(node);
+      return super.getVertexFillColor(node);
     }
     else {
       Integer group = groupMap.get(node.getID());

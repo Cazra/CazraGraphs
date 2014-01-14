@@ -27,7 +27,7 @@ public class HighlightedSetGraphStyle extends GraphStyle {
   
   
   @Override
-  public Color getNodeStrokeColor(VertexSprite node) {
+  public Color getVertexStrokeColor(VertexSprite node) {
     if(node.isSelected()) {
       return selectedStrokeColor;
     }
@@ -41,7 +41,7 @@ public class HighlightedSetGraphStyle extends GraphStyle {
   
   
   @Override
-  public Color getNodeFillColor(VertexSprite node) {
+  public Color getVertexFillColor(VertexSprite node) {
     if(node.isSelected()) {
       return selectedFillColor;
     }

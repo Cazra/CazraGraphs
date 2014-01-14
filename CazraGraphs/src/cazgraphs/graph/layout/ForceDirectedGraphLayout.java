@@ -53,8 +53,19 @@ public class ForceDirectedGraphLayout extends GraphLayout {
   private int visibleSize = 0;
   
   
-  public ForceDirectedGraphLayout() {
+  
+  /** Resets the vertex to have 0 velocity and mass based on the dimensions of its label. */
+  public void resetPhysics(VertexSprite sprite) {
+    sprite.setPhysics(new ParticlePhysics());
+    updatePhysics(sprite);
   }
+  
+  /** Updates the mass of the vertex based on the dimensions of its label. */
+  public void updatePhysics(VertexSprite sprite) {
+    VertexLabel label = sprite.getLabel();
+    setMass(sprite, Math.max(1,label.width * label.height /(32*32)));
+  }
+  
   
   
   /** 
@@ -64,7 +75,7 @@ public class ForceDirectedGraphLayout extends GraphLayout {
    * animation!
    */
   public void stepLayout(GraphSprite graph) {
-    if(isFrozen()) {
+    if(isPaused()) {
       return;
     }
     visibleSize = 0;
@@ -85,8 +96,34 @@ public class ForceDirectedGraphLayout extends GraphLayout {
     // to save computation time.
     double energy = getGraphEnergy(graph);
     if(energy < THRESHOLD) {
-      setFrozen(true);
+      setPaused(true);
     }
+  }
+  
+  
+  private double getDX(VertexSprite vertex) {
+    return vertex.getPhysicsProp(ParticlePhysics.DX);
+  }
+  
+  private double getDY(VertexSprite vertex) {
+    return vertex.getPhysicsProp(ParticlePhysics.DY);
+  }
+  
+  private double getMass(VertexSprite vertex) {
+    return vertex.getPhysicsProp(ParticlePhysics.MASS);
+  }
+  
+  
+  private void setDX(VertexSprite vertex, double value) {
+    vertex.setPhysicsProp(ParticlePhysics.DX, value);
+  }
+  
+  private void setDY(VertexSprite vertex, double value) {
+    vertex.setPhysicsProp(ParticlePhysics.DY, value);
+  }
+  
+  private void setMass(VertexSprite vertex, double value) {
+    vertex.setPhysicsProp(ParticlePhysics.MASS, value);
   }
   
   
@@ -96,16 +133,19 @@ public class ForceDirectedGraphLayout extends GraphLayout {
         continue;
       }
       
-      vertex.x += vertex.dx;
-      vertex.y += vertex.dy;
+      vertex.x += getDX(vertex);
+      vertex.y += getDY(vertex);
     }
   }
   
   /** Dampens the velocity of the vertices as if they are moving through a viscous fluid. */
   public void dampenNodes(GraphSprite graph) {
     for(VertexSprite vertex : graph.getSprites()) {
-      vertex.dx *= DAMP;
-      vertex.dy *= DAMP;
+    //  vertex.dx *= DAMP;
+    //  vertex.dy *= DAMP;
+      
+      setDX(vertex, getDX(vertex)*DAMP);
+      setDY(vertex, getDY(vertex)*DAMP);
     }
   }
   
@@ -152,12 +192,15 @@ public class ForceDirectedGraphLayout extends GraphLayout {
         double dist2 = Math.max(32*32, GameMath.distSq(vertex.x, vertex.y, other.x, other.y));
         double dist = Math.sqrt(dist2);
         
-        double nodeAccel = -1 * antigrav*SPEED * other.mass / dist2;
+        double nodeAccel = -1 * antigrav*SPEED * getMass(other) / dist2;
         double xUnit = (other.x - vertex.x)/dist;
         double yUnit = (other.y - vertex.y)/dist;
         
-        vertex.dx += nodeAccel * xUnit;
-        vertex.dy += nodeAccel * yUnit;
+      //  vertex.dx += nodeAccel * xUnit;
+      //  vertex.dy += nodeAccel * yUnit;
+      
+        setDX(vertex, getDX(vertex) + nodeAccel * xUnit);
+        setDY(vertex, getDY(vertex) + nodeAccel * yUnit);
       }
     }
   }
@@ -186,12 +229,15 @@ public class ForceDirectedGraphLayout extends GraphLayout {
         
         double dist = Math.max(1,GameMath.dist(vertex.x, vertex.y, other.x, other.y));
         
-        double nodeAccel = springForce*SPEED * dist / vertex.mass;
+        double nodeAccel = springForce*SPEED * dist / getMass(vertex);
         double xUnit = (other.x - vertex.x)/dist;
         double yUnit = (other.y - vertex.y)/dist;
         
-        vertex.dx += nodeAccel * xUnit;
-        vertex.dy += nodeAccel * yUnit;
+      //  vertex.dx += nodeAccel * xUnit;
+      //  vertex.dy += nodeAccel * yUnit;
+        
+        setDX(vertex, getDX(vertex) + nodeAccel * xUnit);
+        setDY(vertex, getDY(vertex) + nodeAccel * yUnit);
       }
     }
   }
@@ -211,8 +257,11 @@ public class ForceDirectedGraphLayout extends GraphLayout {
       double xUnit = (0 - vertex.x)/dist;
       double yUnit = (0 - vertex.y)/dist;
       
-      vertex.dx += nodeAccel * xUnit;
-      vertex.dy += nodeAccel * yUnit;
+    //  vertex.dx += nodeAccel * xUnit;
+    //  vertex.dy += nodeAccel * yUnit;
+    
+      setDX(vertex, getDX(vertex) + nodeAccel * xUnit);
+      setDY(vertex, getDY(vertex) + nodeAccel * yUnit);
     }
   }
   
@@ -225,7 +274,7 @@ public class ForceDirectedGraphLayout extends GraphLayout {
         continue;
       }
       
-      double nodeE = Math.sqrt(vertex.dx*vertex.dx + vertex.dy*vertex.dy);
+      double nodeE = Math.sqrt(getDX(vertex)*getDX(vertex) + getDY(vertex)*getDY(vertex));
       energy += nodeE / visibleSize;
     }
     return energy;

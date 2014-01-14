@@ -8,7 +8,7 @@ import pwnee.*;
 import cazgraphs.graph.*;
 
 /** Defines how the non-label part of a node should be drawn. */
-public abstract class NodeStyle {
+public abstract class VertexStyle {
   
   /** 
    * Determines whether the shape rendered by this style for a node contains 
@@ -33,14 +33,14 @@ public abstract class NodeStyle {
     GraphStyle gStyle = node.getGraph().getStyle();
     
     // fill the interior
-    g.setColor(gStyle.getNodeFillColor(node));
+    g.setColor(gStyle.getVertexFillColor(node));
     g.fill(shape);
     
     // draw the outline
     Stroke origStroke = g.getStroke();
     g.setStroke(new BasicStroke(gStyle.getEdgeThickness(node, node)));
     
-    g.setColor(gStyle.getNodeStrokeColor(node));
+    g.setColor(gStyle.getVertexStrokeColor(node));
     g.draw(shape);
     g.setStroke(origStroke);
   }

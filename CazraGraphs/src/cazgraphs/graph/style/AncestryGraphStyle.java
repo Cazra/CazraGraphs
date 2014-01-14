@@ -116,9 +116,9 @@ public class AncestryGraphStyle extends GraphStyle {
   
   
   
-  public Color getNodeStrokeColor(VertexSprite node) {
+  public Color getVertexStrokeColor(VertexSprite node) {
     if(descendants == null || node.isSelected()) {
-      return super.getNodeFillColor(node);
+      return super.getVertexFillColor(node);
     }
     else {
       int ancestry = getAncestryHint(node.getID());
@@ -141,9 +141,9 @@ public class AncestryGraphStyle extends GraphStyle {
   }
   
   
-  public Color getNodeFillColor(VertexSprite node) {
+  public Color getVertexFillColor(VertexSprite node) {
     if(descendants == null || node.isSelected()) {
-      return super.getNodeFillColor(node);
+      return super.getVertexFillColor(node);
     }
     else {
       int ancestry = getAncestryHint(node.getID());

@@ -37,33 +37,18 @@ public class GraphSprite extends Sprite {
   /** The actual graph data structure this sprite provides a view for. */
   private DirectedGraph graph;
   
-  
-
   /** The most recently selected node. Null if no nodes are currently selected.*/
   public VertexSprite selectedNode = null;
   
   /** The set of nodes that are currently selected. */
   public Set<VertexSprite> selectedNodes = new HashSet<>();
   
-  /** 
-   * Optional reference to a camera. This is potentially useful for clipping and 
-   * for setting uniform stroke widths, regardless of the camera's zoom.
-   */
-  public Camera camera;
-  
   /** The style for specifying the colors and font metrics for this graph. */
   private GraphStyle style = new GraphStyle();
   
   
-  /** The default style used to render the graph's edges. */
-  private EdgeStyle defaultEdgeStyle = new SolidEdgeStyle();
-  
-  
   /** The layout algorithm used by this graph. */
-  public GraphLayout layoutAlgorithm = new DefaultGraphLayout();
-  
-  /** These nodes ignore all physics to influence their position. */
-  public Set<VertexSprite> anchorNodes = new HashSet<>();
+  private GraphLayout layoutAlgorithm = new DefaultGraphLayout();
   
   
   
@@ -117,7 +102,8 @@ public class GraphSprite extends Sprite {
     VertexSprite sprite = new VertexSprite(this, id);
     vertexSprites.put(id, sprite);
     
-    layoutAlgorithm.setFrozen(false);
+    layoutAlgorithm.resetPhysics(sprite);
+    layoutAlgorithm.setPaused(false);
     return sprite;
   }
   
@@ -139,7 +125,7 @@ public class GraphSprite extends Sprite {
     
     vertexSprites.remove(id);
     
-    layoutAlgorithm.setFrozen(false);
+    layoutAlgorithm.setPaused(false);
   }
   
   
@@ -152,6 +138,7 @@ public class GraphSprite extends Sprite {
   /** Sets the object stored at a vertex in the graph. */
   public void setObject(String vertexID, Object obj) {
     graph.setObject(vertexID, obj);
+    layoutAlgorithm.updatePhysics(getSprite(vertexID));
   }
   
   
@@ -201,7 +188,7 @@ public class GraphSprite extends Sprite {
       vertex.setEdgeLabel(to, label);
     }
     
-    layoutAlgorithm.setFrozen(false);
+    layoutAlgorithm.setPaused(false);
   }
   
   
@@ -209,7 +196,7 @@ public class GraphSprite extends Sprite {
   /** Removes the edge from one vertex to another if it is present. */
   public void removeEdge(String from, String to) {
     graph.removeEdge(from, to);
-    layoutAlgorithm.setFrozen(false);
+    layoutAlgorithm.setPaused(false);
   }
   
   /** Removes all edges in this graph. */
@@ -295,6 +282,11 @@ public class GraphSprite extends Sprite {
   //////// Layout
   
   
+  /** Returns the graph's current layout algorithm. */
+  public GraphLayout getLayout() {
+    return layoutAlgorithm;
+  }
+  
   /** 
    * Performs one step through the layout algorithm.
    */
@@ -303,8 +295,23 @@ public class GraphSprite extends Sprite {
   }
   
   /** Freezes the graph so that the layout algorithm becomes inactive. */
-  public void freezeLayout() {
-    layoutAlgorithm.setFrozen(true);
+  public void pauseLayout() {
+    layoutAlgorithm.setPaused(true);
+  }
+  
+  /** 
+   * Sets the layout algorithm for the graph and initializes the physics 
+   * properties of the vertices for that algorithm.
+   */
+  public void setLayout(GraphLayout alg) {
+    if(alg == null) {
+      throw new CazgraphException("The layout algorithm for the graph cannot be null.");
+    }
+    
+    layoutAlgorithm = alg;
+    for(VertexSprite sprite : getSprites()) {
+      alg.resetPhysics(sprite);
+    }
   }
   
   
@@ -424,11 +431,6 @@ public class GraphSprite extends Sprite {
     }
     
     this.style = style;
-  }
-  
-  /** Returns the default style used to render edges in this graph. */
-  public EdgeStyle getDefaultEdgeStyle() {
-    return defaultEdgeStyle;
   }
   
 }

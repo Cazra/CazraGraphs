@@ -44,7 +44,7 @@ public class BipartiteGraphStyle extends GraphStyle {
    * Decides what color to use to draw the border of a node's shape. 
    * Override this to implement super special coloring effects. 
    */
-  public Color getNodeStrokeColor(VertexSprite node) {
+  public Color getVertexStrokeColor(VertexSprite node) {
     if(node.isSelected()) {
       return selectedStrokeColor;
     }
@@ -63,7 +63,7 @@ public class BipartiteGraphStyle extends GraphStyle {
    * Decides what color to use to fill the interior of a node's shape.
    * Override this to implement super special coloring effects.
    */
-  public Color getNodeFillColor(VertexSprite node) {
+  public Color getVertexFillColor(VertexSprite node) {
     if(node.isSelected()) {
       return selectedFillColor;
     }

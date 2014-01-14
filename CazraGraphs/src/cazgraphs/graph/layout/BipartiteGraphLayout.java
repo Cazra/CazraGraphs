@@ -30,8 +30,18 @@ public class BipartiteGraphLayout extends GraphLayout {
   }
   
   
+  public void resetPhysics(VertexSprite sprite) {
+    // No special physics to set.
+  }
+  
+  public void updatePhysics(VertexSprite sprite) {
+    // No special physics to set. 
+  }
+  
+  
+  
   public void stepLayout(GraphSprite graph) {
-    if(isFrozen()) {
+    if(isPaused()) {
       return;
     }
     
@@ -90,7 +100,7 @@ public class BipartiteGraphLayout extends GraphLayout {
       offsetX += dims.getWidth() + vspacing;
     }
     
-    setFrozen(true);
+    setPaused(true);
   }
   
 }

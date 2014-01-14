@@ -7,7 +7,7 @@ import pwnee.Camera;
 import cazgraphs.graph.*;
 
 /** 
- * Provides colors and font metrics to be used by nodes in a GraphSprite. 
+ * Provides colors and font metrics to be used by vertices in a GraphSprite. 
  */
 public class GraphStyle {
   
@@ -17,45 +17,55 @@ public class GraphStyle {
   /** Whether to adjust stroke thickness to the camera's zoom. */
   public boolean adjustToZoom = false;
   
-  /** The font used to draw text labels for nodes in this graph. */
+  /** The font used to draw text labels for vertices in this graph. */
   public Font font = new Font("Lucida Console", java.awt.Font.PLAIN, 12);
   
-  /** The amount of spacing (in pixels) between lines of text in nodes' labels. */
+  /** The amount of spacing (in pixels) between lines of text in vertices' labels. */
   public int lineSpacing = 1;
   
-  /** The amount of padding between a node label's edges and its bounding box. */
+  /** The amount of padding between a vertex label's edges and its bounding box. */
   public int padding = 5;
   
-  /** Default color for text node labels. */
+  /** Default color for text vertex labels. */
   public Color textColor = new Color(0x000000);
   
+  /** Default vertex style. */
+  public VertexStyle vertexStyle = new EllipseVertexStyle();
   
-  /** The default outline color for nodes in the graph. */
+  /** The default outline color for vertices in the graph. */
   public Color strokeColor = new Color(0x7777AA);
   
-  /** The default interior color for nodes in the graph. */
+  /** The default interior color for vertices in the graph. */
   public Color fillColor = new Color(0xAAAAAAFF, true);
   
-  /** The outline color for selected nodes.  */
+  /** The outline color for selected vertices.  */
   public Color selectedStrokeColor = new Color(0xFFDDAA); 
   
-  /** The interior color for selected nodes. */
+  /** The interior color for selected vertices. */
   public Color selectedFillColor = new Color(0xAAFFFFDD, true);
+  
+  /** The default edge style. */
+  public EdgeStyle edgeStyle = new SolidEdgeStyle(); 
   
   /** The default color for edges. */
   public Color edgeColor = new Color(0xAA7777AA, true);
-  
   
   /** The line thickness of edges in the graph. */
   public int edgeThickness = 1;
   
   
+  /** Decides what VertexStyle to use to render a vertex's shape. */
+  public VertexStyle getVertexStyle(VertexSprite vertex) {
+    return vertexStyle;
+  }
+  
+  
   /** 
-   * Decides what color to use to draw the border of a node's shape. 
+   * Decides what color to use to draw the border of a vertex's shape. 
    * Override this to implement super special coloring effects. 
    */
-  public Color getNodeStrokeColor(VertexSprite node) {
-    if(node.isSelected()) {
+  public Color getVertexStrokeColor(VertexSprite vertex) {
+    if(vertex.isSelected()) {
       return selectedStrokeColor;
     }
     else {
@@ -64,11 +74,11 @@ public class GraphStyle {
   }
   
   /** 
-   * Decides what color to use to fill the interior of a node's shape.
+   * Decides what color to use to fill the interior of a vertex's shape.
    * Override this to implement super special coloring effects.
    */
-  public Color getNodeFillColor(VertexSprite node) {
-    if(node.isSelected()) {
+  public Color getVertexFillColor(VertexSprite vertex) {
+    if(vertex.isSelected()) {
       return selectedFillColor;
     }
     else {
@@ -77,14 +87,21 @@ public class GraphStyle {
   }
   
   
-  /** Decides what color to use to draw the edge between two nodes. */
-  public Color getEdgeColor(VertexSprite n1, VertexSprite n2) {
+  
+  /** Decides what EdgeStyle to use to draw the edge between two vertices. */
+  public EdgeStyle getEdgeStyle(VertexSprite v1, VertexSprite v2) {
+    return edgeStyle;
+  }
+  
+  
+  /** Decides what color to use to draw the edge between two vertices. */
+  public Color getEdgeColor(VertexSprite v1, VertexSprite v2) {
     return edgeColor;
   }
   
   
   /** Decides the thickness to draw an edge with. */
-  public int getEdgeThickness(VertexSprite n1, VertexSprite n2) {
+  public int getEdgeThickness(VertexSprite v1, VertexSprite v2) {
     if(adjustToZoom && camera != null) {
       return (int) (edgeThickness/camera.zoom); 
     }

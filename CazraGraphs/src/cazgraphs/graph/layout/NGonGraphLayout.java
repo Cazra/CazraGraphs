@@ -14,10 +14,20 @@ import cazgraphs.graph.*;
  */
 public class NGonGraphLayout extends GraphLayout {
   
+  
+  public void resetPhysics(VertexSprite sprite) {
+    // No special physics to set.
+  }
+  
+  public void updatePhysics(VertexSprite sprite) {
+    // No special physics to set. 
+  }
+  
+  
   public void stepLayout(GraphSprite graph) {
     int numNodes = graph.size();
     
-    if(isFrozen() || numNodes < 2) {
+    if(isPaused() || numNodes < 2) {
       return;
     }
     
@@ -58,7 +68,7 @@ public class NGonGraphLayout extends GraphLayout {
       angle += theta;
     }
     
-    setFrozen(true);
+    setPaused(true);
   }
   
 }

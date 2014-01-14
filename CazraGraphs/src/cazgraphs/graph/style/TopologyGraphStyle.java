@@ -70,9 +70,9 @@ public class TopologyGraphStyle extends GraphStyle {
   
   
   
-  public Color getNodeStrokeColor(VertexSprite node) {
+  public Color getVertexStrokeColor(VertexSprite node) {
     if(topology == null || node.isSelected()) {
-      return super.getNodeStrokeColor(node);
+      return super.getVertexStrokeColor(node);
     }
     else {
       Integer depth = topology.get(node.getID());
@@ -85,9 +85,9 @@ public class TopologyGraphStyle extends GraphStyle {
   }
   
   
-  public Color getNodeFillColor(VertexSprite node) {
+  public Color getVertexFillColor(VertexSprite node) {
     if(topology == null || node.isSelected()) {
-      return super.getNodeFillColor(node);
+      return super.getVertexFillColor(node);
     }
     else {
       Integer depth = topology.get(node.getID());
