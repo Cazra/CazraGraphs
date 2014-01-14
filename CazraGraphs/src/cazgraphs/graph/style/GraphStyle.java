@@ -54,8 +54,8 @@ public class GraphStyle {
    * Decides what color to use to draw the border of a node's shape. 
    * Override this to implement super special coloring effects. 
    */
-  public Color getNodeStrokeColor(GNodeSprite node) {
-    if(node.isSelected) {
+  public Color getNodeStrokeColor(VertexSprite node) {
+    if(node.isSelected()) {
       return selectedStrokeColor;
     }
     else {
@@ -67,8 +67,8 @@ public class GraphStyle {
    * Decides what color to use to fill the interior of a node's shape.
    * Override this to implement super special coloring effects.
    */
-  public Color getNodeFillColor(GNodeSprite node) {
-    if(node.isSelected) {
+  public Color getNodeFillColor(VertexSprite node) {
+    if(node.isSelected()) {
       return selectedFillColor;
     }
     else {
@@ -78,13 +78,13 @@ public class GraphStyle {
   
   
   /** Decides what color to use to draw the edge between two nodes. */
-  public Color getEdgeColor(GNodeSprite n1, GNodeSprite n2) {
+  public Color getEdgeColor(VertexSprite n1, VertexSprite n2) {
     return edgeColor;
   }
   
   
   /** Decides the thickness to draw an edge with. */
-  public int getEdgeThickness(GNodeSprite n1, GNodeSprite n2) {
+  public int getEdgeThickness(VertexSprite n1, VertexSprite n2) {
     if(adjustToZoom && camera != null) {
       return (int) (edgeThickness/camera.zoom); 
     }

@@ -4,10 +4,11 @@ import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Dimension2D;
 
+import cazgraphs.CazgraphException;
 import cazgraphs.util.FontUtils;
 
-/** An immutable label to represent an object stored in a GNodeSprite. */
-public class GNodeLabel {
+/** An immutable label to represent an object stored in a VertexSprite. */
+public class VertexLabel {
   
   /** The graph this label is using font metrics from. */
   public GraphSprite graph;
@@ -29,7 +30,7 @@ public class GNodeLabel {
    * Create the label from an object. We also need to pass in a graph so we can  
    * use its font metrics to compute the label's metrics.
    */
-  public GNodeLabel(GraphSprite g, Object o) {
+  public VertexLabel(GraphSprite g, Object o) {
     graph = g;
     object = o;
     objString = object.toString();
@@ -37,7 +38,11 @@ public class GNodeLabel {
   }
   
   
-  
+  /** 
+   * Computes the width and height of the label using the graph's 
+   * style properties. 
+   * @param graph   The graph whose style to use in the metrics computations.
+   */
   public void computeMetrics(GraphSprite graph) {
     if(object instanceof Image) {
       Image img = (Image) object;
@@ -53,16 +58,21 @@ public class GNodeLabel {
       }
     }
     else if(graph != null) {
-      Dimension2D dims = FontUtils.getStringDimensions(objString, graph.style.font, graph.style.lineSpacing);
+      Dimension2D dims = FontUtils.getStringDimensions(objString, graph.getStyle().font, graph.getStyle().lineSpacing);
       width = dims.getWidth();
       height = dims.getHeight();
+    }
+    else {
+      width = 0;
+      height = 0;
+      objString = "";
     }
   }
   
   
   
   public Dimension2D getDimensions() {
-    return new Dimension((int) width + graph.style.padding*2, (int) height + graph.style.padding*2);
+    return new Dimension((int) width + graph.getStyle().padding*2, (int) height + graph.getStyle().padding*2);
   }
   
   
@@ -76,12 +86,11 @@ public class GNodeLabel {
       g.drawImage(img, 0, 0, null);
     }
     else {
-      g.setFont(graph.style.font);
-      g.setColor(graph.style.textColor);
-      FontUtils.drawString(g, object.toString(), graph.style.lineSpacing);
+      g.setFont(graph.getStyle().font);
+      g.setColor(graph.getStyle().textColor);
+      FontUtils.drawString(g, objString, graph.getStyle().lineSpacing);
     }
     
     g.setTransform(origT);
   }
-  
 }

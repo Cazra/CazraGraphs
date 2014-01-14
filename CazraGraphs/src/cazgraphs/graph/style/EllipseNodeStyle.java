@@ -11,7 +11,7 @@ import cazgraphs.graph.*;
 public class EllipseNodeStyle extends NodeStyle {
   
   
-  public boolean containsPoint(Point2D p, GNodeSprite node) {
+  public boolean containsPoint(Point2D p, VertexSprite node) {
     try {
       // Compute the ellipse's metrics.
       Dimension2D dims = getDimensions(node);
@@ -34,7 +34,7 @@ public class EllipseNodeStyle extends NodeStyle {
   }
   
   
-  public void draw(Graphics2D g, GNodeSprite node) {
+  public void draw(Graphics2D g, VertexSprite node) {
     
     // Create the ellipse to exactly fit the rectangular shape of the label.
     Dimension2D dims = getDimensions(node);
@@ -47,8 +47,8 @@ public class EllipseNodeStyle extends NodeStyle {
   
   
   /** Returns what the dimensions of the node's shape, calculated to fit its label's dimensions. */
-  public Dimension2D getDimensions(GNodeSprite node) {
-    Dimension2D labelDims = node.label.getDimensions();
+  public Dimension2D getDimensions(VertexSprite node) {
+    Dimension2D labelDims = node.getLabel().getDimensions();
     double labelW = labelDims.getWidth();
     double labelH = labelDims.getHeight();
     
@@ -72,7 +72,7 @@ public class EllipseNodeStyle extends NodeStyle {
   }
   
   
-  public Point2D getPointOnShape(double angle, GNodeSprite node) {
+  public Point2D getPointOnShape(double angle, VertexSprite node) {
     Point2D p = new Point2D.Double(1,0);
     Dimension2D dims = node.getDimensions();
     

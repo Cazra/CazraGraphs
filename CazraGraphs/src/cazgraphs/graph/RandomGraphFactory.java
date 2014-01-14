@@ -19,7 +19,7 @@ import cazgraphs.graph.style.*;
 public class RandomGraphFactory {
   
   public static GraphSprite randomGraph(int numNodes, double connectivity, GraphLayout layout) {
-    GraphSprite graph = new GraphSprite(true);
+    GraphSprite graph = new GraphSprite();
     graph.layoutAlgorithm = layout;
     
     // produce the nodes.
@@ -33,7 +33,7 @@ public class RandomGraphFactory {
         name += nodesMade;
       }
       usedNames.add(name);
-      GNodeSprite node = graph.addNode(name);
+      VertexSprite node = graph.addVertex(name);
       
       // random style
       /*
@@ -49,14 +49,14 @@ public class RandomGraphFactory {
     }
     
     // randomly produce the edges.
-    for(GNodeSprite node : graph.nodes.values()) {
-      for(GNodeSprite other : graph.nodes.values()) {
-        if(node == other) {
+    for(String from : graph.getVertexIDs()) {
+      for(String to : graph.getVertexIDs()) {
+        if(from.equals(to)) {
           continue;
         }
         
         if(GameMath.rand.nextDouble() <= connectivity/numNodes) {
-          graph.addEdge(node, other);
+          graph.addEdge(from, to);
         }
       }
     }

@@ -2,6 +2,9 @@ package cazgraphs.graph;
 
 import java.util.*;
 
+import cazgraphs.graph.model.*;
+import cazgraphs.graph.style.CyclicTreeGraphStyle;
+
 /** 
  * Provides various static methods for solving various graph problems
  * with GraphSprites. 
@@ -9,29 +12,29 @@ import java.util.*;
 public class GraphSolver {
   
   /** Finds the connected components of a graph. Completes in O(n) time. */
-  public static List<List<GNodeSprite>> findComponents(GraphSprite graph) {
-    List<List<GNodeSprite>> components = new ArrayList<>();
+  public static List<Set<String>> findComponents(DirectedGraph graph) {
+    List<Set<String>> components = new ArrayList<>();
     
     // keep track of which which nodes have already been visited, along with their 
-    Set<GNodeSprite> visited = new HashSet<>();
-    for(GNodeSprite node : graph.nodes.values()) {
-      if(visited.contains(node)) {
+    Set<String> visited = new HashSet<>();
+    for(String startID : graph.getVertexIDs()) {
+      if(visited.contains(startID)) {
         continue;
       }
       
-      List<GNodeSprite> component = new ArrayList<>();
+      Set<String> component = new HashSet<>();
       
       // do a depth-first-search to populate the component.
-      Stack<GNodeSprite> dfs = new Stack<>();
-      dfs.push(node);
+      Stack<String> dfs = new Stack<>();
+      dfs.push(startID);
       while(!dfs.empty()) {
-        GNodeSprite curNode = dfs.pop();
-        if(!visited.contains(curNode)) {
-          component.add(curNode);
-          visited.add(curNode);
+        String vertexID = dfs.pop();
+        if(!visited.contains(vertexID)) {
+          component.add(vertexID);
+          visited.add(vertexID);
           
-          for(GNodeSprite other : curNode.getNeighbors()) {
-            dfs.push(other);
+          for(String otherID : graph.getNeighbors(vertexID)) {
+            dfs.push(otherID);
           }
         }
       }
@@ -46,44 +49,53 @@ public class GraphSolver {
   
   /** 
    * Finds the roots of the connected components in a graph. 
-   * If a component is a tree, then its source is returned.
-   * Otherwise, it is not guaranteed what node will be returned for the component. 
+   * Here we define the roots as a minimum set of vertices from which all
+   * other vertices in the graph can be accessed.
    * Completes in O(n) time.
    */
-  public static List<GNodeSprite> findRoots(GraphSprite graph) {
-    List<GNodeSprite> roots = new ArrayList<>();
+  public static Set<String> findRoots(DirectedGraph graph) {
+    DirectedGraph graphCopy = graph.createCopy();
+    Set<String> roots = new HashSet<>();
     
-    List<List<GNodeSprite>> components = findComponents(graph);
+    // Source vertices are roots.
+    Set<String> sources = findSources(graphCopy);
     
-    // Do a depth-first-search on each component to find the roots.
-    for(List<GNodeSprite> component : components) {
-      // Keep track of which which nodes have already been visited. 
-      // Our root nodes will sort of just bubble up as we eliminate visited nodes.
-      Set<GNodeSprite> visited = new HashSet<>();
-      GNodeSprite root = null;
-      
-      for(GNodeSprite node : component) {
-        if(visited.contains(node)) {
-          continue;
-        }
-        root = node;
+    // Add each source as a root and remove their subgraphs from the graph copy.
+    for(String source : sources) {
+      roots.add(source);
+      graphCopy.removeSubGraph(source);
+    }
+    
+    // Find the remaining non-source root vertices.
+    while(graphCopy.size() > 0) {
+      List<Set<String>> components = findComponents(graphCopy);
+      for(Set<String> component : components) {
+        String topID = null;
+        Set<String> visited = new HashSet<>();
         
-        Stack<GNodeSprite> dfs = new Stack<>();
-        dfs.push(node);
-        while(!dfs.empty()) {
-          GNodeSprite curNode = dfs.pop();
-          if(!visited.contains(curNode)) {
-            visited.add(curNode);
+        // Find the "top" vertices in each component.
+        for(String vertexID : component) {
+          if(!visited.contains(vertexID)) {
+            topID = vertexID;
             
-            for(GNodeSprite other : curNode.getEdges()) {
-              dfs.push(other);
+            // Visit each vertex accessible from the top vertex by dfs.
+            Stack<String> dfs = new Stack<>();
+            dfs.push(topID);
+            while(!dfs.empty()) {
+              String id = dfs.pop();
+              if(!visited.contains(id)) {
+                visited.add(id);
+                for(String otherID : graphCopy.getEdges(id)) {
+                  dfs.push(otherID);
+                }
+              }
             }
           }
         }
-      }
-      
-      if(root != null) {
-        roots.add(root);
+        
+        // Add the top vertex to our roots, and remove its subgraph.
+        roots.add(topID);
+        graphCopy.removeSubGraph(topID);
       }
     }
     
@@ -92,12 +104,12 @@ public class GraphSolver {
   
   
   /** Finds all the source nodes in a graph. */
-  public static List<GNodeSprite> findSources(GraphSprite graph) {
-    List<GNodeSprite> sources = new ArrayList<>();
+  public static Set<String> findSources(DirectedGraph graph) {
+    Set<String> sources = new HashSet<>();
     
-    for(GNodeSprite node : graph.nodes.values()) {
-      if(node.isSource()) {
-        sources.add(node);
+    for(String vertexID : graph.getVertexIDs()) {
+      if(graph.getBackwardEdges(vertexID).size() == 0) {
+        sources.add(vertexID);
       }
     }
     
@@ -106,12 +118,12 @@ public class GraphSolver {
   
   
   /** Finds all the sink nodes in a graph. */
-  public static List<GNodeSprite> findSinks(GraphSprite graph) {
-    List<GNodeSprite> sinks = new ArrayList<>();
+  public static Set<String> findSinks(GraphSprite graph) {
+    Set<String> sinks = new HashSet<>();
     
-    for(GNodeSprite node : graph.nodes.values()) {
-      if(node.isSink()) {
-        sinks.add(node);
+    for(String vertexID : graph.getVertexIDs()) {
+      if(graph.getEdges(vertexID).size() == 0) {
+        sinks.add(vertexID);
       }
     }
     
@@ -119,25 +131,25 @@ public class GraphSolver {
   }
   
   
-  /** Returns the list of nodes reachable from a particular node. Completes in O(n) time. */
-  public static List<GNodeSprite> reachableNodes(GNodeSprite root) {  
-    Set<GNodeSprite> visited = new HashSet<>();
-    Stack<GNodeSprite> dfs = new Stack<>();
+  /** Returns the set of nodes reachable from a particular node. Completes in O(n) time. */
+  public static Set<String> reachableNodes(DirectedGraph graph, String rootID) {  
+    Set<String> visited = new HashSet<>();
+    Stack<String> dfs = new Stack<>();
     
-    dfs.push(root);
+    dfs.push(rootID);
     while(!dfs.empty()) {
-      GNodeSprite node = dfs.pop();
+      String vertexID = dfs.pop();
       
-      if(!visited.contains(node)) {
-        visited.add(node);
+      if(!visited.contains(vertexID)) {
+        visited.add(vertexID);
         
-        for(GNodeSprite other : node.getEdges()) {
-          dfs.push(other);
+        for(String otherID : graph.getEdges(vertexID)) {
+          dfs.push(otherID);
         }
       }
     }
     
-    return new ArrayList<>(visited);
+    return visited;
   }
   
   
@@ -150,27 +162,27 @@ public class GraphSolver {
    * their distance from the top node. 
    * Completes in O(n) time.
    */
-  public static Map<GNodeSprite, Integer> simpleTopology(GNodeSprite top) {
-    Map<GNodeSprite, Integer> depths = new HashMap<>();
+  public static Map<String, Integer> simpleTopology(DirectedGraph graph, String topID) {
+    Map<String, Integer> depths = new HashMap<>();
     
-    Set<GNodeSprite> visited = new HashSet<>();
-    Queue<GNodeSprite> bfsNodes = new LinkedList<>();
+    Set<String> visited = new HashSet<>();
+    Queue<String> bfsNodes = new LinkedList<>();
     Queue<Integer> bfsDepths = new LinkedList<>();
     
-    bfsNodes.add(top);
+    bfsNodes.add(topID);
     bfsDepths.add(0);
     while(!bfsNodes.isEmpty()) {
-      GNodeSprite node = bfsNodes.remove();
+      String vertexID = bfsNodes.remove();
       int depth = bfsDepths.remove();
       
-      if(visited.contains(node)) {
+      if(visited.contains(vertexID)) {
         continue;
       }
-      visited.add(node);
-      depths.put(node, depth);
+      visited.add(vertexID);
+      depths.put(vertexID, depth);
       
-      for(GNodeSprite other : node.getEdges()) {
-        bfsNodes.add(other);
+      for(String otherID : graph.getEdges(vertexID)) {
+        bfsNodes.add(otherID);
         bfsDepths.add(depth + 1);
       }
     }
@@ -187,27 +199,27 @@ public class GraphSolver {
    * their distance from the bottom node. 
    * Completes in O(n) time.
    */
-  public static Map<GNodeSprite, Integer> simpleReverseTopology(GNodeSprite top) {
-    Map<GNodeSprite, Integer> depths = new HashMap<>();
+  public static Map<String, Integer> simpleReverseTopology(DirectedGraph graph, String bottomID) {
+    Map<String, Integer> depths = new HashMap<>();
     
-    Set<GNodeSprite> visited = new HashSet<>();
-    Queue<GNodeSprite> bfsNodes = new LinkedList<>();
+    Set<String> visited = new HashSet<>();
+    Queue<String> bfsNodes = new LinkedList<>();
     Queue<Integer> bfsDepths = new LinkedList<>();
     
-    bfsNodes.add(top);
+    bfsNodes.add(bottomID);
     bfsDepths.add(0);
     while(!bfsNodes.isEmpty()) {
-      GNodeSprite node = bfsNodes.remove();
+      String vertexID = bfsNodes.remove();
       int depth = bfsDepths.remove();
       
-      if(visited.contains(node)) {
+      if(visited.contains(vertexID)) {
         continue;
       }
-      visited.add(node);
-      depths.put(node, depth);
+      visited.add(vertexID);
+      depths.put(vertexID, depth);
       
-      for(GNodeSprite other : node.getFromEdges()) {
-        bfsNodes.add(other);
+      for(String otherID : graph.getBackwardEdges(vertexID)) {
+        bfsNodes.add(otherID);
         bfsDepths.add(depth + 1);
       }
     }
@@ -226,36 +238,36 @@ public class GraphSolver {
    * algorithm only returns 1 solution though.
    * Completes in O(n) time.
    */
-  public static List<Set<GNodeSprite>> bicolorGraph(GraphSprite graph, String startNodeID) {
-    List<Set<GNodeSprite>> result = new ArrayList<>();
-    Set<GNodeSprite> redSet = new HashSet<>();
-    Set<GNodeSprite> greenSet = new HashSet<>();
-    Set<GNodeSprite> oddSet = new HashSet<>();
+  public static List<Set<String>> bicolorGraph(DirectedGraph graph, String startID) {
+    List<Set<String>> result = new ArrayList<>();
+    Set<String> redSet = new HashSet<>();
+    Set<String> greenSet = new HashSet<>();
+    Set<String> oddSet = new HashSet<>();
     result.add(redSet);
     result.add(greenSet);
     result.add(oddSet);
     
-    Set<GNodeSprite> visited = new HashSet<>();
-    Queue<GNodeSprite> startingNodes = new LinkedList<>(graph.nodes.values());
+    Set<String> visited = new HashSet<>();
+    Queue<String> startingNodes = new LinkedList<>(graph.getVertexIDs());
     
-    // get our first starting node.
-    GNodeSprite node = graph.getNode(startNodeID);
-    if(node == null) {
-      node = startingNodes.remove();
+    // get our first starting vertex.
+    String vertexID = startID;
+    if(vertexID == null) {
+      vertexID = startingNodes.remove();
     }
     
     while(!startingNodes.isEmpty()) {
-      if(!visited.contains(node)) {
-        bicolorPartial(graph, node, visited, result);
+      if(!visited.contains(vertexID)) {
+        _bicolorPartial(graph, vertexID, visited, result);
       }
       
-      // get our next starting node.
-      node = startingNodes.remove();
+      // get our next starting vertex.
+      vertexID = startingNodes.remove();
     }
     
-    // We might have one node left over. Be sure to color it too.
-    if(!visited.contains(node)) {
-      bicolorPartial(graph, node, visited, result);
+    // We might have one vertex left over. Be sure to color it too.
+    if(!visited.contains(vertexID)) {
+      _bicolorPartial(graph, vertexID, visited, result);
     }
     
     return result;
@@ -263,52 +275,52 @@ public class GraphSolver {
   
   
   /** Computes the bipartness of part of a graph by bfs. */
-  private static void bicolorPartial(GraphSprite graph, GNodeSprite node, Set<GNodeSprite> visited, List<Set<GNodeSprite>> result) {
+  private static void _bicolorPartial(DirectedGraph graph, String vertexID, Set<String> visited, List<Set<String>> result) {
     int RED = 0;
     int GREEN = 1;
     int ODD = -1;
     
-    Set<GNodeSprite> redSet = result.get(0);
-    Set<GNodeSprite> greenSet = result.get(1);
-    Set<GNodeSprite> oddSet = result.get(2);
+    Set<String> redSet = result.get(0);
+    Set<String> greenSet = result.get(1);
+    Set<String> oddSet = result.get(2);
     
-    Queue<GNodeSprite> bfsNodes = new LinkedList<>();
+    Queue<String> bfsNodes = new LinkedList<>();
     Queue<Integer> bfsDest = new LinkedList<>();
     
     // Ready our bfs queues.
-    bfsNodes.add(node);
+    bfsNodes.add(vertexID);
     bfsDest.add(RED);
     
     // Do a breadth-first search do compute the graph coloring.
     while(!bfsNodes.isEmpty()) {
-      node = bfsNodes.remove();
+      vertexID = bfsNodes.remove();
       int color = bfsDest.remove();
       
       // process the node.
-      if(!visited.contains(node)) {
-        visited.add(node);
+      if(!visited.contains(vertexID)) {
+        visited.add(vertexID);
         if(color == RED) {
-          redSet.add(node);
-          for(GNodeSprite toNode : node.getNeighbors()) {
-            if(redSet.contains(toNode)) {
-              redSet.remove(toNode);
-              oddSet.add(toNode);
+          redSet.add(vertexID);
+          for(String neighborID : graph.getNeighbors(vertexID)) {
+            if(redSet.contains(neighborID)) {
+              redSet.remove(neighborID);
+              oddSet.add(neighborID);
             }
-            else if(!greenSet.contains(toNode)){
-              bfsNodes.add(toNode);
+            else if(!greenSet.contains(neighborID)){
+              bfsNodes.add(neighborID);
               bfsDest.add(GREEN);
             }
           }
         }
         else if(color == GREEN) {
-          greenSet.add(node);
-          for(GNodeSprite toNode : node.getNeighbors()) {
-            if(greenSet.contains(toNode)) {
-              greenSet.remove(toNode);
-              oddSet.add(toNode);
+          greenSet.add(vertexID);
+          for(String neighborID : graph.getNeighbors(vertexID)) {
+            if(greenSet.contains(neighborID)) {
+              greenSet.remove(neighborID);
+              oddSet.add(neighborID);
             }
-            else if(!redSet.contains(toNode)){
-              bfsNodes.add(toNode);
+            else if(!redSet.contains(neighborID)){
+              bfsNodes.add(neighborID);
               bfsDest.add(RED);
             }
           }
@@ -323,17 +335,17 @@ public class GraphSolver {
    * Returns true iff any component has cycles. 
    * Completes in O(n) time. 
    */
-  public static boolean hasCycles(GraphSprite graph) {
-    if(graph.isDirected) {
+  public static boolean hasCycles(DirectedGraph graph, boolean isDirected) {
+    if(isDirected) {
       // Nodes can be marked either 0 or 1. 
       // 0 means that the node's descending paths are being explored. 
       // 1 means that the node's descending paths have been completely 
       // explorered and found to contain no cycles.
-      Map<GNodeSprite, Integer> mark = new HashMap<>();
+      Map<String, Integer> mark = new HashMap<>();
       
-      for(GNodeSprite first : graph.nodes.values()) {
-        if(!mark.containsKey(first)) {
-          if(_hasCyclesDirected(first, mark)) {
+      for(String firstID : graph.getVertexIDs()) {
+        if(!mark.containsKey(firstID)) {
+          if(_hasCyclesDirected(graph, firstID, mark)) {
             return true;
           }
         }
@@ -349,17 +361,17 @@ public class GraphSolver {
    * A directed graph has a cycle iff a depth-first search finds a back edge. 
    * This is a bit more complicated than detecting a cycle in an undireceted graph. 
    */
-  private static boolean _hasCyclesDirected(GNodeSprite cur, Map<GNodeSprite, Integer> mark) {
+  private static boolean _hasCyclesDirected(DirectedGraph graph, String vertexID, Map<String, Integer> mark) {
     // Mark it 0 to show that we've visited the node, but we're still exploring 
     // its descending paths.
-    mark.put(cur, 0);
+    mark.put(vertexID, 0);
     
     // explore the node's adjacency list.
-    for(GNodeSprite next : cur.getEdges()) {
-      if(!mark.containsKey(next) && _hasCyclesDirected(next, mark)) {
+    for(String nextID : graph.getEdges(vertexID)) {
+      if(!mark.containsKey(nextID) && _hasCyclesDirected(graph, nextID, mark)) {
         return true;
       }
-      else if(mark.get(next) == 0) {
+      else if(mark.get(nextID) == 0) {
         // We've revisited a node in a path currently being explored. 
         // This means we've encountered a back-edge and therefore encountered 
         // a cycle.
@@ -369,37 +381,37 @@ public class GraphSolver {
     
     // We've completely explored the node's adjacency list without encountering
     // a back-edge. Mark it as 1.
-    mark.put(cur, 1);
+    mark.put(vertexID, 1);
     return false;
   }
   
-  private static boolean _hasCyclesUndirected(GraphSprite graph) {
-    Set<GNodeSprite> visited = new HashSet<>();
+  private static boolean _hasCyclesUndirected(DirectedGraph graph) {
+    Set<String> visited = new HashSet<>();
     
-    for(GNodeSprite source : graph.nodes.values()) {
-      if(!visited.contains(source)) {
+    for(String startID : graph.getVertexIDs()) {
+      if(!visited.contains(startID)) {
         
         // do a depth first search from this node.
-        Stack<GNodeSprite> dfs = new Stack<>();
-        Stack<GNodeSprite> dfsPrev = new Stack<>();
-        dfs.push(source);
-        dfsPrev.push(new GNodeSprite(null, "dummy"));
+        Stack<String> dfs = new Stack<>();
+        Stack<String> dfsPrev = new Stack<>();
+        dfs.push(startID);
+        dfsPrev.push(null);
         
         while(!dfs.isEmpty()) {
-          GNodeSprite cur = dfs.pop();
-          GNodeSprite prev = dfsPrev.pop();
+          String vertexID = dfs.pop();
+          String prevID = dfsPrev.pop();
           
-          if(visited.contains(cur)) {
+          if(visited.contains(vertexID)) {
             return true;
           }
           else {
-            visited.add(cur);
+            visited.add(vertexID);
             
             // traverse our edges (except to the node that we came from).
-            for(GNodeSprite next : cur.getNeighbors()) {
-              if(next != prev) {
-                dfs.push(next);
-                dfsPrev.push(cur);
+            for(String nextID : graph.getNeighbors(vertexID)) {
+              if(!nextID.equals(prevID)) {
+                dfs.push(nextID);
+                dfsPrev.push(vertexID);
               }
             }
           }
@@ -411,12 +423,22 @@ public class GraphSolver {
   
   
   /** 
-   * Returns true iff no cycles exist in any component of our graph 
-   * if we treat it as an undirected graph. 
+   * Returns true iff no undirected cycles exist in any component of our graph 
+   * and each vertex has at most 1 backward edge.
    * Completes in O(n) time.
    */
-  public static boolean isTree(GraphSprite graph) {
-    return !_hasCyclesUndirected(graph);
+  public static boolean isTree(DirectedGraph graph) {
+    if(graph.size() == 0 || _hasCyclesUndirected(graph)) {
+      return false;
+    }
+    else {
+      for(String vertexID : graph.getVertexIDs()) {
+        if(graph.getBackwardEdges(vertexID).size() > 1) {
+          return false;
+        }
+      }
+      return true;
+    }
   }
   
   
@@ -426,68 +448,70 @@ public class GraphSolver {
    * is not necessarily a tree.
    * Iff the graph is made of multiple components, then a forest of trees is produced.
    */
-  public static GraphSprite convertToTree(GraphSprite graph) {
-    List<GNodeSprite> roots = findSources(graph);
+  public static DirectedGraph convertToTree(DirectedGraph graph) {
+    Set<String> roots = findRoots(graph);
     int nodeNum = 0;
     
-    GraphSprite forest = new GraphSprite(true);
-    forest.layoutAlgorithm = graph.layoutAlgorithm;
-    forest.style = new cazgraphs.graph.style.CyclicTreeGraphStyle();
+    // The graph could become several individual trees.
+    DirectedGraph forest = new DirectedGraph();
     
     // Marks nodes as visited.
     // A node is marked 0 if its "subtree" is currently being explored.
     // A node is marked 1 if its "subtree" has been completely explored without encountering a cycle.
     // A node is marked 2 if it is encountered again in a cycle.
-    Map<GNodeSprite, Integer> mark = new HashMap<>();
+    Map<String, Integer> mark = new HashMap<>();
     
     // We'll pass an integer by reference to produce unique IDs for duplicate nodes.
     IntPointer dupID = new IntPointer(0);
     
-    for(GNodeSprite root : roots) {
-      _convertToForest(forest, root, null, mark, dupID);
+    // Produce a tree for each possible root.
+    for(String rootID : roots) {
+      _convertToTree(forest, graph, rootID, null, mark, dupID);
     }
     
     return forest;
   }
   
-  private static void _convertToForest(GraphSprite forest, GNodeSprite cur, GNodeSprite prev, Map<GNodeSprite, Integer> mark, IntPointer dupID) {
-    mark.put(cur, 0);
+  private static void _convertToTree(DirectedGraph forest, DirectedGraph graph, String vertexID, String prevID, Map<String, Integer> mark, IntPointer dupID) {
+    mark.put(vertexID, 0);
     
     // copy the node into the tree.
-    GNodeSprite treeNode;
-    if(forest.getNode(cur.id) == null) {
-      treeNode = forest.addNode(cur.id, cur.object);
+    String treeVertexID;
+    if(!forest.hasVertex(vertexID)) {
+      treeVertexID = vertexID;
+      forest.addVertex(treeVertexID, graph.getObject(vertexID));
     }
     else {
-      treeNode = forest.addNode(cur.id + ";dup" + dupID.value, cur.object);
+      treeVertexID = "dup;" + vertexID + ";" + dupID.value;
+      forest.addVertex(treeVertexID, graph.getObject(vertexID));
       dupID.value++;
     }
     
     
-    if(prev != null) {
-      forest.addEdge(prev, treeNode);
+    if(prevID != null) {
+      forest.addEdge(prevID, treeVertexID);
     }
     
-    for(GNodeSprite next : cur.getEdges()) {
-      if(!mark.containsKey(next) || mark.get(next) == 1) {
+    for(String nextID : graph.getEdges(vertexID)) {
+      if(!mark.containsKey(nextID) || mark.get(nextID) == 1) {
         // explore the "subtree".
-        _convertToForest(forest, next, treeNode, mark, dupID);
+        _convertToTree(forest, graph, nextID, treeVertexID, mark, dupID);
       }
-      else if(mark.get(next) == 0 || mark.get(next) == 2) {
+      else if(mark.get(nextID) == 0 || mark.get(nextID) == 2) {
         // A cycle! Copy the cycle node, but don't explore its children.
-        mark.put(next, 2);
+        mark.put(nextID, 2);
         
-        GNodeSprite cycleNode = new ReferenceGNodeSprite(forest.getNode(next.id));
-        forest.nodes.put(cycleNode.id, cycleNode);
+        String cycleVertexID = "ref;" + nextID + ";" + dupID.value;
+        forest.addVertex(cycleVertexID, cycleVertexID);
         dupID.value++;
         
-        forest.addEdge(treeNode, cycleNode);
+        forest.addEdge(treeVertexID, cycleVertexID);
       }
     }
     
     // mark the path as safe.
-    if(mark.get(cur) != 2) {
-      mark.put(cur, 1);
+    if(mark.get(vertexID) != 2) {
+      mark.put(vertexID, 1);
     }
   }
   

@@ -18,7 +18,7 @@ public abstract class NodeStyle {
    * @return              True, iff p is contained in the shape drawn by this 
    *                      style to fit its node's label.
    */
-  public abstract boolean containsPoint(Point2D p, GNodeSprite node);
+  public abstract boolean containsPoint(Point2D p, VertexSprite node);
   
   /** 
    * Renders the style to fit the dimensions of a node's label 
@@ -26,11 +26,11 @@ public abstract class NodeStyle {
    * @param g             The graphics context, passed in by the node's draw method.
    * @param node          The node using this style.
    */
-  public abstract void draw(Graphics2D g, GNodeSprite node);
+  public abstract void draw(Graphics2D g, VertexSprite node);
   
   
-  protected void renderShape(Graphics2D g, GNodeSprite node, Shape shape) {
-    GraphStyle gStyle = node.graph.style;
+  protected void renderShape(Graphics2D g, VertexSprite node, Shape shape) {
+    GraphStyle gStyle = node.getGraph().getStyle();
     
     // fill the interior
     g.setColor(gStyle.getNodeFillColor(node));
@@ -52,11 +52,11 @@ public abstract class NodeStyle {
    * @param node          The node using this style.
    * @return              The dimensions of the bounding box for this style's shape.
    */
-  public abstract Dimension2D getDimensions(GNodeSprite node);
+  public abstract Dimension2D getDimensions(VertexSprite node);
   
   /** 
    * Returns the outermost point on the boundary of the shape drawn by this
    * node style in a specified direction (angle in degrees) from the shape's center.
    */
-  public abstract Point2D getPointOnShape(double angle, GNodeSprite node);
+  public abstract Point2D getPointOnShape(double angle, VertexSprite node);
 }

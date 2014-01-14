@@ -29,12 +29,18 @@ README
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ======================================================================*/
 
+v 2.0
+
 Cazra Graphs is a collection of data structure visualizations written with 
 my Pwnee2D Java game engine. 
 
 Currently it provides frameworks for visualizing the following data structures: 
 Graphs (directed and undirected)
 Trees
+
+When updates are made that are not backwards-compatible, the major version 
+number is incremented and the minor version number is set back to 0. 
+For backwards-compatible updates, the minor version number is incremented.
 
 Building the class files/jar from the source code:
 -------------------

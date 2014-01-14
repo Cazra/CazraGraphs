@@ -15,12 +15,14 @@ import java.util.Set;
 import pwnee.*;
 import pwnee.sprites.Sprite;
 
+import cazgraphs.CazgraphException;
 import cazgraphs.graph.layout.*;
+import cazgraphs.graph.model.DirectedGraph;
 import cazgraphs.graph.style.*;
 
 
 /** 
- * A sprite for a graph visualization.
+ * A sprite representing a directed or undirected graph.
  *
  * Each node in the graph is associated with a unique ID.
  * The nodes each maintain their own set of edges, instead of the graph 
@@ -28,23 +30,20 @@ import cazgraphs.graph.style.*;
  */
 public class GraphSprite extends Sprite {
   
-  /** The nodes in this graph. */
-  public Map<String, GNodeSprite> nodes = new HashMap<>();
   
-  /** These nodes ignore all physics to influence their position. */
-  public Set<GNodeSprite> anchorNodes = new HashSet<>();
+  /** A mapping of vertices in the graph to sprites used to represent them. */
+  private Map<String, VertexSprite> vertexSprites = new HashMap<>();
   
-  /** 
-   * Whether this map is directed. If false, then the graph's edges are 
-   * bidirectional. 
-   */
-  public boolean isDirected;
+  /** The actual graph data structure this sprite provides a view for. */
+  private DirectedGraph graph;
   
+  
+
   /** The most recently selected node. Null if no nodes are currently selected.*/
-  public GNodeSprite selectedNode = null;
+  public VertexSprite selectedNode = null;
   
   /** The set of nodes that are currently selected. */
-  public Set<GNodeSprite> selectedNodes = new HashSet<>();
+  public Set<VertexSprite> selectedNodes = new HashSet<>();
   
   /** 
    * Optional reference to a camera. This is potentially useful for clipping and 
@@ -53,101 +52,220 @@ public class GraphSprite extends Sprite {
   public Camera camera;
   
   /** The style for specifying the colors and font metrics for this graph. */
-  public GraphStyle style = new GraphStyle();
+  private GraphStyle style = new GraphStyle();
+  
+  
+  /** The default style used to render the graph's edges. */
+  private EdgeStyle defaultEdgeStyle = new SolidEdgeStyle();
+  
   
   /** The layout algorithm used by this graph. */
   public GraphLayout layoutAlgorithm = new DefaultGraphLayout();
   
-  public GraphSprite(double x, double y, boolean directed) {
-    super(x,y);
-    isDirected = directed;
+  /** These nodes ignore all physics to influence their position. */
+  public Set<VertexSprite> anchorNodes = new HashSet<>();
+  
+  
+  
+  /** Creates a directed graph at the origin using the provided model. */  
+  public GraphSprite(DirectedGraph graph) {
+    super(0, 0);
+    this.graph = graph;
+    for(String vertexID : graph.getVertexIDs()) {
+      vertexSprites.put(vertexID, new VertexSprite(this, vertexID));
+    }
   }
   
-  /** Creates a bidirectional graph. */
-  public GraphSprite(double x, double y) {
-    this(x,y,false);
-  }
-  
-  public GraphSprite(boolean directed) {
-    this(0, 0, directed);
-  }
-  
+  /** Creates an empty directed graph at the origin. */
   public GraphSprite() {
-    this(0,0,false);
+    this(new DirectedGraph());
   }
   
   
   
   
-  //////// Model
+  //////// Model operations
   
-  /** Returns a node in this graph, given that node's id. */
-  public GNodeSprite getNode(String id) {
-    return nodes.get(id);
+  /** Returns the underlying graph data structure for this sprite. */
+  public DirectedGraph getGraph() {
+    return graph;
+  }
+  
+  
+  
+  /** Returns true iff the graph contains a vertex with the specified ID. */
+  public boolean hasVertex(String id) {
+    return graph.hasVertex(id);
+  }
+  
+  
+  /** Returns the set of all the vertex IDs in the graph. */
+  public Set<String> getVertexIDs() {
+    return graph.getVertexIDs();
   }
   
   
   /**
-   * Creates a node and adds it to the graph.
-   * @return  The node that was just added.
+   * Creates a vertex and adds it to the graph.
+   * @param   id    The unique ID to represent the vertex in this graph.
+   * @param   object    The object stored at the vertex.
+   * @return  The VertexSprite that was added to the graph.
    */
-  public GNodeSprite addNode(String id, Object object) {
-    GNodeSprite node = new GNodeSprite(this, id, object);
-    this.nodes.put(node.id, node);
-    layoutAlgorithm.setFrozen(false);
-    return node;
-  }
-  
-  public GNodeSprite addNode(Object object) {
-    if(object == null) {
-      return null;
-    }
-    return addNode(object.toString(), object);
-  }
-  
-  
-  /** Removes a node from the graph. */
-  public void removeNode(String id) {
-    GNodeSprite node = nodes.get(id);
-    if(node != null) {
-      node.removeAllEdges();
-      nodes.remove(id);
-      layoutAlgorithm.setFrozen(false);
-    }
-  }
-  
-  public void removeNode(GNodeSprite node) {
-    removeNode(node.id);
-  }
-  
-  /** Adds an edge from node id1 to node id2. */
-  public void addEdge(String id1, String id2) {
-    GNodeSprite node1 = nodes.get(id1);
-    GNodeSprite node2 = nodes.get(id2);
+  public VertexSprite addVertex(String id, Object object) {
+    graph.addVertex(id, object);
     
-    if(node1 != null && node2 != null) {
-      node1.addEdge(node2);
-    }
-    layoutAlgorithm.setFrozen(false);
-  }
-  
-  public void addEdge(String id1, String id2, String label) {
-    GNodeSprite node1 = nodes.get(id1);
-    GNodeSprite node2 = nodes.get(id2);
+    VertexSprite sprite = new VertexSprite(this, id);
+    vertexSprites.put(id, sprite);
     
-    if(node1 != null && node2 != null) {
-      node1.addEdge(node2, label);
-    }
+    layoutAlgorithm.setFrozen(false);
+    return sprite;
+  }
+  
+  
+  /**
+   * Adds a vertex containing a String to the graph. The String is both the
+   * unique key and the contents of the vertex.
+   * @return The VertexSprite that was added to the graph.
+   * @throws CazgraphException if id is null.
+   */
+  public VertexSprite addVertex(String id) {
+    return addVertex(id, id);
+  }
+  
+  
+  /** Removes a vertex from the graph, if it exists. */
+  public void removeVertex(String id) {
+    graph.removeVertex(id);
+    
+    vertexSprites.remove(id);
+    
     layoutAlgorithm.setFrozen(false);
   }
   
-  public void addEdge(GNodeSprite n1, GNodeSprite n2) {
-    addEdge(n1.id, n2.id);
+  
+  /** Gets the object stored at a vertex in the graph. */
+  public Object getObject(String vertexID) {
+    return graph.getObject(vertexID);
   }
   
-  public void addEdge(GNodeSprite n1, GNodeSprite n2, String label) {
-    addEdge(n1.id, n2.id, label);
+  
+  /** Sets the object stored at a vertex in the graph. */
+  public void setObject(String vertexID, Object obj) {
+    graph.setObject(vertexID, obj);
   }
+  
+  
+  /** Returns true iff the specified edge exists in this graph. */
+  public boolean hasEdge(String from, String to) {
+    return graph.hasEdge(from, to);
+  }
+  
+  
+  /** Returns the union of the forward and backward edges for the specified vertex. */
+  public Set<String> getNeighbors(String vertexID) {
+    return graph.getNeighbors(vertexID);
+  }
+  
+  
+  /** Returns the set of forward edges for the specified vertex. */
+  public Set<String> getEdges(String vertexID) {
+    return graph.getEdges(vertexID);
+  }
+  
+  
+  /** Returns the set of backward edges for the specified vertex. */
+  public Set<String> getBackwardEdges(String vertexID) {
+    return graph.getBackwardEdges(vertexID);
+  }
+  
+  
+  /** 
+   * Adds an edge from one vertex to another, given the IDs of the vertices.
+   */
+  public void addEdge(String from, String to) {
+    addEdge(from, to, "");
+  }
+  
+  /** 
+   * Adds a labeled edge from one vertex to another, 
+   * given the IDs of the vertices and the text for the label.
+   * The vertex from must already exist in the graph, but the vertex to doesn't
+   * need to be created yet for the edge to be added to the graph.
+   */
+  public void addEdge(String from, String to, String label) {
+    graph.addEdge(from, to);
+    
+    VertexSprite vertex = getSprite(from);
+    // Create the label for the edge if one was provided.
+    if(label != null && !"".equals(label)) {
+      vertex.setEdgeLabel(to, label);
+    }
+    
+    layoutAlgorithm.setFrozen(false);
+  }
+  
+  
+  
+  /** Removes the edge from one vertex to another if it is present. */
+  public void removeEdge(String from, String to) {
+    graph.removeEdge(from, to);
+    layoutAlgorithm.setFrozen(false);
+  }
+  
+  /** Removes all edges in this graph. */
+  public void removeAllEdges() {
+    graph.removeAllEdges();
+  }
+  
+  
+  /** Removes all edges to and from the specified vertex. */
+  public void removeAllEdges(String vertexID) {
+    graph.removeAllEdges(vertexID);
+  }
+  
+  
+  /** Gets the unique ID for an edge between two vertices. */
+  public String getEdgeID(String from, String to) {
+    if(from.compareTo(to) < 0) {
+      return from + "->" + to;
+    }
+    else {
+      return to + "->" + from;
+    }
+  }
+  
+  
+  /** Clears the graph. */
+  public void clear() {
+    graph.clear();
+  }
+  
+  
+  
+  //////// Vertex sprites
+  
+  
+  
+  /** Returns the sprite for the given vertex ID. */
+  public VertexSprite getSprite(String vertexID) {
+    return vertexSprites.get(vertexID);
+  }
+  
+  
+  /** Returns the collection of vertex sprites in the graph. */
+  public Collection<VertexSprite> getSprites() {
+    return vertexSprites.values();
+  }
+  
+  
+  
+  //////// Graph properties
+  
+  /** Returns the number of vertices in the graph. */
+  public int size() {
+    return graph.size();
+  }
+  
   
   /** 
    * Returns a list of all the root nodes for components in the graph. 
@@ -155,23 +273,23 @@ public class GraphSprite extends Sprite {
    * In cyclic graph components that don't have a source node, this will try to  
    * return the critical node in that component with the most edges. 
    */
-  public List<GNodeSprite> findRoots() {
-    return GraphSolver.findRoots(this);
+  public Set<String> findRoots() {
+    return GraphSolver.findRoots(getGraph());
   }
   
   /** Returns a list of the connected components of the graph. */
-  public List<List<GNodeSprite>> findComponents() {
-    return GraphSolver.findComponents(this);
+  public List<Set<String>> findComponents() {
+    return GraphSolver.findComponents(getGraph());
   }
   
   /** Returns true iff this graph contains any cycles. */
   public boolean hasCycles() {
-    return GraphSolver.hasCycles(this);
+    return GraphSolver.hasCycles(getGraph(), true);
   }
   
   /** Returns true iff this graph is a tree (or a forest of trees). */
   public boolean isTree() {
-    return GraphSolver.isTree(this);
+    return GraphSolver.isTree(getGraph());
   }
   
   //////// Layout
@@ -194,52 +312,72 @@ public class GraphSprite extends Sprite {
   
   
   /** 
-   * Returns the node containing the given point, in view coordinates. 
+   * Returns the topmost node containing the given point, in view coordinates. 
    * Null, if no node contains the point.
    */
-  public GNodeSprite getNodeAtPoint(Point2D p) {
-    List<GNodeSprite> nodeList = new ArrayList<>(nodes.values());
-    Collections.reverse(nodeList);
+  public VertexSprite getNodeAtPoint(Point2D p) {
+    List<VertexSprite> spriteList = new ArrayList<>(vertexSprites.values());
+    Collections.reverse(spriteList);
     
-    for(GNodeSprite node : nodeList) {
-      if(node.containsPoint(p)) {
-        return node;
+    for(VertexSprite vertex : spriteList) {
+      if(vertex.containsPoint(p)) {
+        return vertex;
       }
     }
     
     return null;
   }
   
-  /** 
-   * Causes a node in this graph to become selected.
-   * Null causes no node to be currently selected. 
-   */
-  public void selectNode(GNodeSprite node) {
-    selectedNode = node;
-    if(node != null) {
-      node.isSelected = true;
-      selectedNodes.add(node);
+  
+  
+  
+  /** Adds a vertex to the current set of selected vertices. */
+  public void selectVertex(VertexSprite vertex) {
+    selectedNode = vertex;
+    if(vertex != null) {
+      vertex.setSelected(true);
+      selectedNodes.add(vertex);
     }
-    else {
-      for(GNodeSprite selSprite : selectedNodes) {
-        selSprite.isSelected = false;
-      }
-      selectedNodes.clear();
+  }
+  
+  /** Adds a vertex to the current set of selected vertices. */
+  public void selectVertex(String vertexID) {
+    if(vertexID != null) {
+      selectVertex(getSprite(vertexID));
     }
   }
   
   /**
-   * Sets a node to become the only selected node in this graph.
-   * Null causes no node to be currently selected. 
+   * Sets a vertex to become the only selected vertex in this graph.
+   * Null causes no vertex to be currently selected. 
    */
-  public void selectSingleNode(GNodeSprite node) {
-    selectNode(null);
-    selectNode(node);
+  public void selectSingleVertex(VertexSprite vertex) {
+    unselectAll();
+    selectVertex(vertex);
   }
+  
+  /**
+   * Sets a vertex to become the only selected vertex in this graph.
+   * Null causes no vertex to be currently selected. 
+   */
+  public void selectSingleVertex(String vertexID) {
+    unselectAll();
+    selectVertex(vertexID);
+  }
+  
+  
+  /** Unselects all nodes. */
+  public void unselectAll() {
+    for(VertexSprite vertex : selectedNodes) {
+      vertex.setSelected(false);
+    }
+    selectedNodes.clear();
+  }
+  
   
   //////// Rendering
   
-  /** Draws all the nodes in the graph and their edges. */
+  /** Draws the graph's vertices and edges. */
   public void draw(Graphics2D g) {
     AffineTransform origT = g.getTransform();
     g.setTransform(new AffineTransform());
@@ -251,14 +389,14 @@ public class GraphSprite extends Sprite {
     
     // Draw the edges. 
     Set<String> drawnEdges = new HashSet<>();
-    for(GNodeSprite node : nodes.values()) {
-      node.drawEdges(bufferG, drawnEdges);
+    for(VertexSprite vertex : getSprites()) {
+      vertex.drawEdges(bufferG, drawnEdges);
     }
     
-    // Draw the nodes.
-    for(GNodeSprite node : nodes.values()) {
-      node.render(bufferG);
-      Rectangle2D box = node.getCollisionBox();
+    // Draw the vertices.
+    for(VertexSprite vertex : getSprites()) {
+      vertex.render(bufferG);
+    //  Rectangle2D box = vertex.getCollisionBox();
     //  if(box != null) {
     //    g.setColor(new Color(0xFFAAAA));
     //    g.draw(box);
@@ -269,5 +407,29 @@ public class GraphSprite extends Sprite {
     g.drawImage(drawBuffer, 0, 0, null);
     g.setTransform(origT);
   }
+  
+  
+  /** Gets the GraphStyle currently being used by the graph. */
+  public GraphStyle getStyle() {
+    return style;
+  }
+  
+  /** 
+   * Sets the style for the graph to use. 
+   * @throws CazgraphException if style is null.
+   */
+  public void setStyle(GraphStyle style) {
+    if(style == null) {
+      throw new CazgraphException("The graph's style cannot be null.");
+    }
+    
+    this.style = style;
+  }
+  
+  /** Returns the default style used to render edges in this graph. */
+  public EdgeStyle getDefaultEdgeStyle() {
+    return defaultEdgeStyle;
+  }
+  
 }
 

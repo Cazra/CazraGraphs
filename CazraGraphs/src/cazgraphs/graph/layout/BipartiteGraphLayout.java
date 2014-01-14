@@ -36,15 +36,15 @@ public class BipartiteGraphLayout extends GraphLayout {
     }
     
     // Get the sorted sets.
-    List<Set<GNodeSprite>> bipartite = GraphSolver.bicolorGraph(graph, startNodeID);
+    List<Set<String>> bipartite = GraphSolver.bicolorGraph(graph.getGraph(), startNodeID);
     
-    List<GNodeSprite> set1 = new ArrayList<>(bipartite.get(0));
+    List<String> set1 = new ArrayList<>(bipartite.get(0));
     Collections.sort(set1);
     
-    List<GNodeSprite> set2 = new ArrayList<>(bipartite.get(1));
+    List<String> set2 = new ArrayList<>(bipartite.get(1));
     Collections.sort(set2);
     
-    List<GNodeSprite> oddSet = new ArrayList<>(bipartite.get(2));
+    List<String> oddSet = new ArrayList<>(bipartite.get(2));
     Collections.sort(oddSet);
     
     // arrange set 1.
@@ -52,10 +52,11 @@ public class BipartiteGraphLayout extends GraphLayout {
     double offsetX = 0;
     double maxoffsetY = 0;
     
-    for(GNodeSprite node : set1) {
-      Dimension2D dims = node.getDimensions();
-      node.x = 0-dims.getWidth()/2;
-      node.y = offsetY + dims.getHeight()/2;
+    for(String vertexID : set1) {
+      VertexSprite vertex = graph.getSprite(vertexID);
+      Dimension2D dims = vertex.getDimensions();
+      vertex.x = 0-dims.getWidth()/2;
+      vertex.y = offsetY + dims.getHeight()/2;
       
       offsetY += dims.getHeight() + vspacing;
     }
@@ -66,10 +67,11 @@ public class BipartiteGraphLayout extends GraphLayout {
     offsetY = 0;
     offsetX += hspacing;
     
-    for(GNodeSprite node : set2) {
-      Dimension2D dims = node.getDimensions();
-      node.x = offsetX + dims.getWidth()/2;
-      node.y = offsetY + dims.getHeight()/2;
+    for(String vertexID : set2) {
+      VertexSprite vertex = graph.getSprite(vertexID);
+      Dimension2D dims = vertex.getDimensions();
+      vertex.x = offsetX + dims.getWidth()/2;
+      vertex.y = offsetY + dims.getHeight()/2;
       
       offsetY += dims.getHeight() + vspacing;
     }
@@ -79,10 +81,11 @@ public class BipartiteGraphLayout extends GraphLayout {
     // arrange the odd set.
     offsetX = 0;
     
-    for(GNodeSprite node : oddSet) {
-      Dimension2D dims = node.getDimensions();
-      node.x = offsetX;
-      node.y = maxoffsetY + dims.getHeight()/2;
+    for(String vertexID : oddSet) {
+      VertexSprite vertex = graph.getSprite(vertexID);
+      Dimension2D dims = vertex.getDimensions();
+      vertex.x = offsetX;
+      vertex.y = maxoffsetY + dims.getHeight()/2;
       
       offsetX += dims.getWidth() + vspacing;
     }

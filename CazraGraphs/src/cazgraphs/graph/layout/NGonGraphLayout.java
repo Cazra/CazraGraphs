@@ -8,24 +8,24 @@ import pwnee.GameMath;
 import cazgraphs.graph.*;
 
 /** 
- * This layout arranges the nodes as vertices of an equidistant 
- * n-sided polygon. The nodes are spaced far enough so that edges won't 
- * cross over nodes' shapes.
+ * This layout arranges the vertices as vertices of an equidistant 
+ * n-sided polygon. The vertices are spaced far enough so that edges won't 
+ * cross over vertices' shapes.
  */
 public class NGonGraphLayout extends GraphLayout {
   
   public void stepLayout(GraphSprite graph) {
-    int numNodes = graph.nodes.size();
+    int numNodes = graph.size();
     
     if(isFrozen() || numNodes < 2) {
       return;
     }
     
-    // sort the nodes by their object value.
-    List<GNodeSprite> sorted = new ArrayList<>(graph.nodes.values());
-    Collections.sort(sorted, new Comparator<GNodeSprite>() {
-      public int compare(GNodeSprite o1, GNodeSprite o2) {
-        return o1.object.toString().compareTo(o2.object.toString());
+    // sort the vertices by their object's toString value.
+    List<VertexSprite> sorted = new ArrayList<>(graph.getSprites());
+    Collections.sort(sorted, new Comparator<VertexSprite>() {
+      public int compare(VertexSprite o1, VertexSprite o2) {
+        return o1.getObject().toString().compareTo(o2.getObject().toString());
       }
       
       public boolean equals(Object obj) {
@@ -33,10 +33,10 @@ public class NGonGraphLayout extends GraphLayout {
       }
     });
     
-    // get the maximum node boundary side size
+    // get the maximum vertex boundary side size
     double maxSide = -1;
-    for(GNodeSprite node : sorted) {
-      Dimension2D dims = node.getDimensions();
+    for(VertexSprite vertex : sorted) {
+      Dimension2D dims = vertex.getDimensions();
       if(dims.getWidth() > maxSide) {
         maxSide = dims.getWidth();
       }
@@ -52,9 +52,9 @@ public class NGonGraphLayout extends GraphLayout {
     double radius = sideLength/(2*Math.sin(theta/2));
     
     double angle = 0;
-    for(GNodeSprite node : sorted) {
-      node.x = radius*Math.cos(angle);
-      node.y = 0-radius*Math.sin(angle);
+    for(VertexSprite vertex : sorted) {
+      vertex.x = radius*Math.cos(angle);
+      vertex.y = 0-radius*Math.sin(angle);
       angle += theta;
     }
     

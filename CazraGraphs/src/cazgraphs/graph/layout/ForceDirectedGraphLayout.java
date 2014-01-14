@@ -12,6 +12,12 @@ import pwnee.*;
 
 import cazgraphs.graph.*;
 
+
+
+/** 
+ * A layout that simulates physical forces. Vertices are simulated as 
+ * like-charged particles and edges are simulated as springs.
+ */
 public class ForceDirectedGraphLayout extends GraphLayout {
   /** 
    * The energy threshold (sum of absolute values of the 
@@ -62,8 +68,8 @@ public class ForceDirectedGraphLayout extends GraphLayout {
       return;
     }
     visibleSize = 0;
-    for(GNodeSprite node : graph.nodes.values()) {
-      if(node.isActive()) {
+    for(VertexSprite vertex : graph.getSprites()) {
+      if(vertex.isActive()) {
         visibleSize++;
       }
     }
@@ -85,20 +91,21 @@ public class ForceDirectedGraphLayout extends GraphLayout {
   
   
   public void moveNodes(GraphSprite graph) {
-    for(GNodeSprite node : graph.nodes.values()) {
-      if(!node.isActive()) {
+    for(VertexSprite vertex : graph.getSprites()) {
+      if(!vertex.isActive()) {
         continue;
       }
       
-      node.x += node.dx;
-      node.y += node.dy;
+      vertex.x += vertex.dx;
+      vertex.y += vertex.dy;
     }
   }
   
+  /** Dampens the velocity of the vertices as if they are moving through a viscous fluid. */
   public void dampenNodes(GraphSprite graph) {
-    for(GNodeSprite node : graph.nodes.values()) {
-      node.dx *= DAMP;
-      node.dy *= DAMP;
+    for(VertexSprite vertex : graph.getSprites()) {
+      vertex.dx *= DAMP;
+      vertex.dy *= DAMP;
     }
   }
   
@@ -123,34 +130,34 @@ public class ForceDirectedGraphLayout extends GraphLayout {
   
   /** Applies forces to cause all nodes to repel each other. */
   public void repelNodes(GraphSprite graph) {
-    Collection<GNodeSprite> nnodes = graph.nodes.values();
+    Collection<VertexSprite> vertices = graph.getSprites();
     double antigrav = ANTIGRAV + 100*visibleSize;
     
-    for(GNodeSprite node : nnodes) {
-      if(!node.isActive()) {
+    for(VertexSprite vertex : vertices) {
+      if(!vertex.isActive()) {
         continue;
       }
-      for(GNodeSprite other : nnodes) {
-        if(node == other || !other.isActive()) {
+      for(VertexSprite other : vertices) {
+        if(vertex == other || !other.isActive()) {
           continue;
         }
         
         // Scatter the nodes if they occupy the same point.
-        if(node.x == other.x && node.y == other.y) {
-          node.x += 1*GameMath.cos(scatterAngle);
-          node.y += 1*GameMath.sin(scatterAngle);
+        if(vertex.x == other.x && vertex.y == other.y) {
+          vertex.x += 1*GameMath.cos(scatterAngle);
+          vertex.y += 1*GameMath.sin(scatterAngle);
           scatterAngle += 31;
         }
         
-        double dist2 = Math.max(32*32, GameMath.distSq(node.x, node.y, other.x, other.y));
+        double dist2 = Math.max(32*32, GameMath.distSq(vertex.x, vertex.y, other.x, other.y));
         double dist = Math.sqrt(dist2);
         
         double nodeAccel = -1 * antigrav*SPEED * other.mass / dist2;
-        double xUnit = (other.x - node.x)/dist;
-        double yUnit = (other.y - node.y)/dist;
+        double xUnit = (other.x - vertex.x)/dist;
+        double yUnit = (other.y - vertex.y)/dist;
         
-        node.dx += nodeAccel * xUnit;
-        node.dy += nodeAccel * yUnit;
+        vertex.dx += nodeAccel * xUnit;
+        vertex.dy += nodeAccel * yUnit;
       }
     }
   }
@@ -159,32 +166,32 @@ public class ForceDirectedGraphLayout extends GraphLayout {
   
   /** Applies forces to cause nodes to be attracted to their neighbors by spring forces. */
   public void attractNeighbors(GraphSprite graph) {
-    for(GNodeSprite node : graph.nodes.values()) {
-      if(!node.isActive()) {
+    for(VertexSprite vertex : graph.getSprites()) {
+      if(!vertex.isActive()) {
         continue;
       }
       
       // Get the nodes set of neighbors.
-      Set<GNodeSprite> neighbors = node.getNeighbors();
+      Set<String> neighbors = vertex.getNeighbors();
       
       // attract!
-      for(GNodeSprite other : neighbors) {
-        if(node == other || !other.isActive()) {
+      for(String otherID : neighbors) {
+        VertexSprite other = graph.getSprite(otherID);
+        if(vertex == other || !other.isActive()) {
           continue;
         }
         
-        Set<GNodeSprite> otherNeighbors = other.getNeighbors();
         // It is important that the edge applies equal force to both of its end nodes!
-        double springForce = NSPRING/Math.max(1, Math.max(neighbors.size(), otherNeighbors.size()));
+        double springForce = NSPRING/Math.max(1, Math.max(neighbors.size(), other.getNeighbors().size()));
         
-        double dist = Math.max(1,GameMath.dist(node.x, node.y, other.x, other.y));
+        double dist = Math.max(1,GameMath.dist(vertex.x, vertex.y, other.x, other.y));
         
-        double nodeAccel = springForce*SPEED * dist / node.mass;
-        double xUnit = (other.x - node.x)/dist;
-        double yUnit = (other.y - node.y)/dist;
+        double nodeAccel = springForce*SPEED * dist / vertex.mass;
+        double xUnit = (other.x - vertex.x)/dist;
+        double yUnit = (other.y - vertex.y)/dist;
         
-        node.dx += nodeAccel * xUnit;
-        node.dy += nodeAccel * yUnit;
+        vertex.dx += nodeAccel * xUnit;
+        vertex.dy += nodeAccel * yUnit;
       }
     }
   }
@@ -193,19 +200,19 @@ public class ForceDirectedGraphLayout extends GraphLayout {
   
   /** Applies forces to cause all nodes to be attracted to the graph's origin. */
   public void attractOrigin(GraphSprite graph) {
-    for(GNodeSprite node : graph.nodes.values()) {
-      if(!node.isActive()) {
+    for(VertexSprite vertex : graph.getSprites()) {
+      if(!vertex.isActive()) {
         continue;
       }
       
-      double dist = Math.max(1, GameMath.dist(node.x, node.y, 0, 0));
+      double dist = Math.max(1, GameMath.dist(vertex.x, vertex.y, 0, 0));
         
       double nodeAccel = OSPRING*SPEED * dist;
-      double xUnit = (0 - node.x)/dist;
-      double yUnit = (0 - node.y)/dist;
+      double xUnit = (0 - vertex.x)/dist;
+      double yUnit = (0 - vertex.y)/dist;
       
-      node.dx += nodeAccel * xUnit;
-      node.dy += nodeAccel * yUnit;
+      vertex.dx += nodeAccel * xUnit;
+      vertex.dy += nodeAccel * yUnit;
     }
   }
   
@@ -213,20 +220,14 @@ public class ForceDirectedGraphLayout extends GraphLayout {
   /** Computes the "energy" of the graph. Here, this is the sum of the magnitude of all its nodes' velocities. */
   public double getGraphEnergy(GraphSprite graph) {
     double energy = 0;
-    for(GNodeSprite node : graph.nodes.values()) {
-      if(!node.isActive()) {
+    for(VertexSprite vertex : graph.getSprites()) {
+      if(!vertex.isActive()) {
         continue;
       }
       
-      double nodeE = Math.sqrt(node.dx*node.dx + node.dy*node.dy);
+      double nodeE = Math.sqrt(vertex.dx*vertex.dx + vertex.dy*vertex.dy);
       energy += nodeE / visibleSize;
     }
     return energy;
-  }
-  
-  
-  
-  private boolean isNodeActive(GNodeSprite node) {
-    return (node.isVisible() && node.getOpacity() > 0.5);
   }
 }

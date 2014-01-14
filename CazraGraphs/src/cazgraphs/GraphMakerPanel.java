@@ -42,8 +42,8 @@ public class GraphMakerPanel extends GamePanel {
   public Camera camera;
   
   
-  public GNodeSprite makeEdgeFrom;
-  public GNodeSprite makeEdgeTo;
+  public VertexSprite makeEdgeFrom;
+  public VertexSprite makeEdgeTo;
   
   public boolean showingSelectRect = false;
   public double selectRectLeft = 0;
@@ -52,7 +52,7 @@ public class GraphMakerPanel extends GamePanel {
   public Tooltip tooltip = new Tooltip(new Color(0xCCCCAA), new Color(0xFFFFCC), new Color(0x222222), 1000);
   
   /** A mapping of nodes being dragged to their drag offsets. */
-  public Map<GNodeSprite, Point2D> draggedNodes = new HashMap<>();
+  public Map<VertexSprite, Point2D> draggedNodes = new HashMap<>();
   
   
   public GraphMakerPanel(String filepath) {
@@ -70,7 +70,7 @@ public class GraphMakerPanel extends GamePanel {
   public void reset() {
     // Create the camera
     initCamera();
-    graph = new GraphSprite(true);
+    graph = new GraphSprite();
   }
   
   private void initCamera() {
@@ -106,7 +106,7 @@ public class GraphMakerPanel extends GamePanel {
       for(String vertex : vertices) {
         System.out.println(vertex);
         if(!vertex.equals("")) {
-          graph.addNode(vertex.trim());
+          graph.addVertex(vertex.trim());
         }
       }
       
@@ -118,7 +118,9 @@ public class GraphMakerPanel extends GamePanel {
         if(!edge.equals("")) {
           String[] ends = edge.split("->");
           String source = ends[0].trim();
-          for(String target : ends[1].split(",")) {
+          
+          String[] targets = ends[1].split(",");
+          for(String target : targets) {
             target = target.trim();
             graph.addEdge(source, target);
           }
@@ -141,7 +143,7 @@ public class GraphMakerPanel extends GamePanel {
     try {
       String output = "--\nVertices\n--\n";
       
-      List<String> sortedVertices = new ArrayList<>(graph.nodes.keySet());
+      List<String> sortedVertices = new ArrayList<>(graph.getVertexIDs());
       Collections.sort(sortedVertices);
       
       for(String name : sortedVertices) {
@@ -153,18 +155,18 @@ public class GraphMakerPanel extends GamePanel {
       for(String name : sortedVertices) {
         output += name + " -> ";
         
-        List<GNodeSprite> sortedEdges = new ArrayList<>(graph.nodes.get(name).getEdges());
+        List<String> sortedEdges = new ArrayList<>(graph.getEdges(name));
         Collections.sort(sortedEdges);
         
         boolean first = true;
-        for(GNodeSprite edge : sortedEdges) {
+        for(String toID : sortedEdges) {
           if(first) {
             first = false;
           }
           else {
             output += ", ";
           }
-          output += edge.id;
+          output += toID;
         }
         output += "\n";
       }
@@ -188,7 +190,7 @@ public class GraphMakerPanel extends GamePanel {
     
     
     // mouse click interaction.
-    GNodeSprite node = graph.getNodeAtPoint(mouse.position);
+    VertexSprite node = graph.getNodeAtPoint(mouse.position);
     
     
     // Camera controls for panning/zooming
@@ -214,9 +216,9 @@ public class GraphMakerPanel extends GamePanel {
       // Double-clicking in a blank area produces a new vertex. 
       if(mouse.doubleClicked) {
         String name = JOptionPane.showInputDialog("vertex name:");
-        if(!graph.nodes.containsKey(name)) {
+        if(name != null && !graph.hasVertex(name)) {
           boolean wasFrozen = graph.layoutAlgorithm.isFrozen();
-          node = graph.addNode(name);
+          node = graph.addVertex(name);
           if(node != null) {
             node.x = mouseWorld.getX();
             node.y = mouseWorld.getY();
@@ -236,7 +238,7 @@ public class GraphMakerPanel extends GamePanel {
         
         // unselect the nodes. 
         else {
-          graph.selectNode(null);
+          graph.unselectAll();
         }
         
       }
@@ -246,14 +248,14 @@ public class GraphMakerPanel extends GamePanel {
       if(mouse.justLeftPressed) {
         // shift-click for multiple selection. 
         if(keyboard.isPressed(KeyEvent.VK_SHIFT)) {
-          graph.selectNode(node);
+          graph.selectVertex(node);
         }
         else if(!graph.selectedNodes.contains(node)) {
-          graph.selectSingleNode(node);
+          graph.selectSingleVertex(node);
         }
         
         draggedNodes.clear();
-        for(GNodeSprite draggedNode : graph.selectedNodes) {
+        for(VertexSprite draggedNode : graph.selectedNodes) {
           double dragNodeX = draggedNode.x - mouseWorld.getX();
           double dragNodeY = draggedNode.y - mouseWorld.getY();
           
@@ -269,7 +271,7 @@ public class GraphMakerPanel extends GamePanel {
         makeEdgeTo = graph.getNodeAtPoint(mouse.position);
       
         if(makeEdgeFrom != null && makeEdgeTo != null) {
-          makeEdgeFrom.addEdge(makeEdgeTo);
+          makeEdgeFrom.addEdge(makeEdgeTo.getID());
           makeEdgeFrom = null;
           makeEdgeTo = null;
         }
@@ -277,17 +279,17 @@ public class GraphMakerPanel extends GamePanel {
       
       // double-clicking does neat things depending on the current graph style/layout.
       if(mouse.doubleClicked) {
-        if(graph.style instanceof TopologyGraphStyle) {
-          TopologyGraphStyle style = (TopologyGraphStyle) graph.style;
+        if(graph.getStyle() instanceof TopologyGraphStyle) {
+          TopologyGraphStyle style = (TopologyGraphStyle) graph.getStyle();
           style.setTopology(node);
         }
-        if(graph.style instanceof AncestryGraphStyle) {
-          AncestryGraphStyle style = (AncestryGraphStyle) graph.style;
+        if(graph.getStyle() instanceof AncestryGraphStyle) {
+          AncestryGraphStyle style = (AncestryGraphStyle) graph.getStyle();
           style.setAncestry(node);
         }
-        if(graph.style instanceof BipartiteGraphStyle) {
-          BipartiteGraphStyle style = (BipartiteGraphStyle) graph.style;
-          style.computeBipartiteness(graph, node.id);
+        if(graph.getStyle() instanceof BipartiteGraphStyle) {
+          BipartiteGraphStyle style = (BipartiteGraphStyle) graph.getStyle();
+          style.computeBipartiteness(graph, node.getID());
           
           int hspace = 600;
           int vspace = 40;
@@ -297,7 +299,7 @@ public class GraphMakerPanel extends GamePanel {
             vspace = layout.vspacing;
           }
           
-          graph.layoutAlgorithm = new BipartiteGraphLayout(node.id, hspace, vspace);
+          graph.layoutAlgorithm = new BipartiteGraphLayout(node.getID(), hspace, vspace);
         }
       }
     }
@@ -311,7 +313,7 @@ public class GraphMakerPanel extends GamePanel {
     }
     if(mouse.isLeftPressed) {
       
-      for(GNodeSprite draggedNode : draggedNodes.keySet()) {
+      for(VertexSprite draggedNode : draggedNodes.keySet()) {
         Point2D offset = draggedNodes.get(draggedNode);
         draggedNode.x = mouseWorld.getX() + offset.getX();
         draggedNode.y = mouseWorld.getY() + offset.getY();
@@ -321,9 +323,9 @@ public class GraphMakerPanel extends GamePanel {
     // selection rectangle
     if(mouse.justLeftClicked && showingSelectRect) {
       Rectangle2D rect = getSelectRect(mouseWorld);
-      for(GNodeSprite sprite : graph.nodes.values()) {
+      for(VertexSprite sprite : graph.getSprites()) {
         if(rect.contains(sprite.x, sprite.y)) {
-          graph.selectNode(sprite);
+          graph.selectVertex(sprite);
         }
       }
       showingSelectRect = false;
@@ -332,10 +334,10 @@ public class GraphMakerPanel extends GamePanel {
     // Deleting nodes
     if(keyboard.justPressed(KeyEvent.VK_DELETE)) {
       // delete all currently selected nodes.
-      for(GNodeSprite sprite : graph.selectedNodes) {
-        graph.removeNode(sprite);
+      for(VertexSprite sprite : graph.selectedNodes) {
+        graph.removeVertex(sprite.getID());
       }
-      graph.selectNode(null);
+      graph.unselectAll();
     }
     
     

@@ -22,11 +22,11 @@ public class CyclicTreeGraphStyle extends GraphStyle {
   }
   
 
-  public Color getNodeStrokeColor(GNodeSprite node) {
-    if(node.isSelected) {
+  public Color getNodeStrokeColor(VertexSprite node) {
+    if(node.isSelected()) {
       return selectedStrokeColor;
     }
-    else if(node instanceof ReferenceGNodeSprite) {
+    else if(node.getID().startsWith("ref;")) {
       return cycleStroke;
     }
     else {
@@ -35,11 +35,11 @@ public class CyclicTreeGraphStyle extends GraphStyle {
   }
   
 
-  public Color getNodeFillColor(GNodeSprite node) {
-    if(node.isSelected) {
+  public Color getNodeFillColor(VertexSprite node) {
+    if(node.isSelected()) {
       return selectedFillColor;
     }
-    else if(node instanceof ReferenceGNodeSprite) {
+    else if(node.getID().startsWith("ref;")) {
       return cycleFill;
     }
     else {

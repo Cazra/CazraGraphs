@@ -22,10 +22,10 @@ public class AncestryGraphStyle extends GraphStyle {
   
   
   /** The descendant topology for the graph. */
-  public Map<GNodeSprite, Integer> descendants = null;
+  public Map<String, Integer> descendants = null;
   
   /** The ancestral topology for the graph. */
-  public Map<GNodeSprite, Integer> ancestors = null;
+  public Map<String, Integer> ancestors = null;
   
   /** The maximum depth of the descendant topology. */
   public int maxDesDepth = -1;
@@ -75,14 +75,14 @@ public class AncestryGraphStyle extends GraphStyle {
   
   
   /** Sets the topological information for the style, given the top node. */
-  public void setAncestry(GNodeSprite node) {
+  public void setAncestry(VertexSprite node) {
     if(node == null) {
       descendants = null;
       ancestors = null;
       return;
     }
     
-    descendants = GraphSolver.simpleTopology(node);
+    descendants = GraphSolver.simpleTopology(node.getGraph().getGraph(), node.getID());
     maxDesDepth = -1;
     for(Integer depth : descendants.values()) {
       if(depth > maxDesDepth) {
@@ -90,7 +90,7 @@ public class AncestryGraphStyle extends GraphStyle {
       }
     }
     
-    ancestors = GraphSolver.simpleReverseTopology(node);
+    ancestors = GraphSolver.simpleReverseTopology(node.getGraph().getGraph(), node.getID());
     maxAncDepth = -1;
     for(Integer depth : ancestors.values()) {
       if(depth > maxAncDepth) {
@@ -101,14 +101,14 @@ public class AncestryGraphStyle extends GraphStyle {
   
   
   
-  public int getAncestryHint(GNodeSprite node) {
-    if(descendants.containsKey(node)) {
-      if(ancestors.containsKey(node)) {
+  public int getAncestryHint(String vertexID) {
+    if(descendants.containsKey(vertexID)) {
+      if(ancestors.containsKey(vertexID)) {
         return BOTH;
       }
       return DESCENDANT;
     }
-    else if(ancestors.containsKey(node)) {
+    else if(ancestors.containsKey(vertexID)) {
       return ANCESTOR;
     }
     return NOT_RELATED;
@@ -116,22 +116,22 @@ public class AncestryGraphStyle extends GraphStyle {
   
   
   
-  public Color getNodeStrokeColor(GNodeSprite node) {
-    if(descendants == null || node.isSelected) {
+  public Color getNodeStrokeColor(VertexSprite node) {
+    if(descendants == null || node.isSelected()) {
       return super.getNodeFillColor(node);
     }
     else {
-      int ancestry = getAncestryHint(node);
+      int ancestry = getAncestryHint(node.getID());
       if(ancestry == DESCENDANT) {
-        Integer depth = descendants.get(node);
+        Integer depth = descendants.get(node.getID());
         return getColorForDepth(depth, maxDesDepth, true, ancestry);
       }
       else if(ancestry == ANCESTOR) {
-        Integer depth = ancestors.get(node);
+        Integer depth = ancestors.get(node.getID());
         return getColorForDepth(depth, maxAncDepth, true, ancestry);
       }
       else if(ancestry == BOTH) {
-        Integer depth = descendants.get(node);
+        Integer depth = descendants.get(node.getID());
         return getColorForDepth(depth, Math.max(maxDesDepth, maxAncDepth), true, ancestry);
       }
       else {
@@ -141,22 +141,22 @@ public class AncestryGraphStyle extends GraphStyle {
   }
   
   
-  public Color getNodeFillColor(GNodeSprite node) {
-    if(descendants == null || node.isSelected) {
+  public Color getNodeFillColor(VertexSprite node) {
+    if(descendants == null || node.isSelected()) {
       return super.getNodeFillColor(node);
     }
     else {
-      int ancestry = getAncestryHint(node);
+      int ancestry = getAncestryHint(node.getID());
       if(ancestry == DESCENDANT) {
-        Integer depth = descendants.get(node);
+        Integer depth = descendants.get(node.getID());
         return getColorForDepth(depth, maxDesDepth, node.isSink(), ancestry);
       }
       else if(ancestry == ANCESTOR) {
-        Integer depth = ancestors.get(node);
+        Integer depth = ancestors.get(node.getID());
         return getColorForDepth(depth, maxAncDepth, node.isSource(), ancestry);
       }
       else if(ancestry == BOTH) {
-        Integer depth = descendants.get(node);
+        Integer depth = descendants.get(node.getID());
         return getColorForDepth(depth, Math.max(maxDesDepth, maxAncDepth), false, ancestry);
       }
       else {
@@ -166,22 +166,22 @@ public class AncestryGraphStyle extends GraphStyle {
   }
   
   
-  public Color getEdgeColor(GNodeSprite n1, GNodeSprite n2) {
-    if(descendants == null || getAncestryHint(n1) == NOT_RELATED || getAncestryHint(n2) == NOT_RELATED) {
+  public Color getEdgeColor(VertexSprite n1, VertexSprite n2) {
+    if(descendants == null || getAncestryHint(n1.getID()) == NOT_RELATED || getAncestryHint(n2.getID()) == NOT_RELATED) {
       return getColorForDepth(-1, maxDesDepth, true, NOT_RELATED);
     }
     else {
-      int ancestry = getAncestryHint(n1);
+      int ancestry = getAncestryHint(n1.getID());
       if(ancestry == DESCENDANT) {
-        Integer depth = descendants.get(n1);
+        Integer depth = descendants.get(n1.getID());
         return getColorForDepth(depth, maxDesDepth, true, ancestry);
       }
       else if(ancestry == ANCESTOR) {
-        Integer depth = ancestors.get(n1);
+        Integer depth = ancestors.get(n1.getID());
         return getColorForDepth(depth, maxAncDepth, true, ancestry);
       }
       else if(ancestry == BOTH) {
-        Integer depth = descendants.get(n1);
+        Integer depth = descendants.get(n1.getID());
         return getColorForDepth(depth, Math.max(maxDesDepth, maxAncDepth), true, ancestry);
       }
       else {
@@ -191,8 +191,8 @@ public class AncestryGraphStyle extends GraphStyle {
   }
   
   
-  public int getEdgeThickness(GNodeSprite n1, GNodeSprite n2) {
-    if(descendants == null || getAncestryHint(n1) == NOT_RELATED || getAncestryHint(n2) == NOT_RELATED) {
+  public int getEdgeThickness(VertexSprite n1, VertexSprite n2) {
+    if(descendants == null || getAncestryHint(n1.getID()) == NOT_RELATED || getAncestryHint(n2.getID()) == NOT_RELATED) {
       return super.getEdgeThickness(n1, n2);
     }
     else {

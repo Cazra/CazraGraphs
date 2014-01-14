@@ -26,7 +26,7 @@ Disable Device
 Disguise
 Escape Artist
 Forgery
-GatherInformation
+Gather Information
 Handle Animal
 Heal
 Hide
@@ -64,5 +64,5 @@ Edges
 Cazra -> Appraise, Craft, Disable Device, Knowledge(Arcana), Knowledge(Arch & Eng), Search, Spellcraft, Use Magic Device
 Mort -> Balance, Climb, Disable Device, Escape Artist, Hide, Intimidate, Jump, Move Silently, Open Lock, Perform, Search
 Malcolm -> Decipher Script, Knowledge(History), Search, Spot
-Tymere -> Bluff, Concentration, Diplomacy, Gather Information, , Knowledge(Local), Listen, Sense Motive, Spellcraft, Use Magic Device
+Tymere -> Bluff, Concentration, Diplomacy, Gather Information, Knowledge(Local), Listen, Sense Motive, Spellcraft, Use Magic Device
 Delia -> Concentration, Diplomacy, Handle Animal, Knowledge(Nature), Knowledge(Religion), Heal, Sense Motive, Spellcraft

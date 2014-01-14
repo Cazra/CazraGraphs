@@ -13,9 +13,9 @@ import cazgraphs.graph.*;
  */
 public class BipartiteGraphStyle extends GraphStyle {
   
-  public Set<GNodeSprite> set1;
+  public Set<String> set1;
   
-  public Set<GNodeSprite> set2;
+  public Set<String> set2;
   
   
   public Color set1Stroke = new Color(0xAA5555);
@@ -32,7 +32,7 @@ public class BipartiteGraphStyle extends GraphStyle {
   
   
   public void computeBipartiteness(GraphSprite graph, String startNodeID) {
-    List<Set<GNodeSprite>> bipartite = GraphSolver.bicolorGraph(graph, startNodeID);
+    List<Set<String>> bipartite = GraphSolver.bicolorGraph(graph.getGraph(), startNodeID);
     set1 = bipartite.get(0);
     set2 = bipartite.get(1);
   }
@@ -44,14 +44,14 @@ public class BipartiteGraphStyle extends GraphStyle {
    * Decides what color to use to draw the border of a node's shape. 
    * Override this to implement super special coloring effects. 
    */
-  public Color getNodeStrokeColor(GNodeSprite node) {
-    if(node.isSelected) {
+  public Color getNodeStrokeColor(VertexSprite node) {
+    if(node.isSelected()) {
       return selectedStrokeColor;
     }
-    else if(set1.contains(node)) {
+    else if(set1.contains(node.getID())) {
       return set1Stroke;
     }
-    else if(set2.contains(node)) {
+    else if(set2.contains(node.getID())) {
       return set2Stroke;
     }
     else {
@@ -63,14 +63,14 @@ public class BipartiteGraphStyle extends GraphStyle {
    * Decides what color to use to fill the interior of a node's shape.
    * Override this to implement super special coloring effects.
    */
-  public Color getNodeFillColor(GNodeSprite node) {
-    if(node.isSelected) {
+  public Color getNodeFillColor(VertexSprite node) {
+    if(node.isSelected()) {
       return selectedFillColor;
     }
-    else if(set1.contains(node)) {
+    else if(set1.contains(node.getID())) {
       return set1Fill;
     }
-    else if(set2.contains(node)) {
+    else if(set2.contains(node.getID())) {
       return set2Fill;
     }
     else {

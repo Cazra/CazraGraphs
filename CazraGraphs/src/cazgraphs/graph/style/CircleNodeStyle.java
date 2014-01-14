@@ -11,7 +11,7 @@ import cazgraphs.graph.*;
 public class CircleNodeStyle extends EllipseNodeStyle {
   
   /** To make a circle, just make an ellipse that fits in a square bounding box. */
-  public Dimension2D getDimensions(GNodeSprite node) {
+  public Dimension2D getDimensions(VertexSprite node) {
     Dimension2D dims = super.getDimensions(node);
     double maxSide = Math.max(dims.getWidth(), dims.getHeight());
     return new Dimension((int) maxSide, (int) maxSide);

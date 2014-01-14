@@ -12,7 +12,7 @@ import cazgraphs.graph.*;
 public class TopologyGraphStyle extends GraphStyle {
   
   /** The computed topology for the graph. */
-  public Map<GNodeSprite, Integer> topology = null;
+  public Map<String, Integer> topology = null;
   
   /** The maximum depth of the topology. */
   public int maxDepth = -1;
@@ -53,13 +53,13 @@ public class TopologyGraphStyle extends GraphStyle {
   
   
   /** Sets the topological information for the style, given the top node. */
-  public void setTopology(GNodeSprite node) {
+  public void setTopology(VertexSprite node) {
     if(node == null) {
       topology = null;
       return;
     }
     
-    topology = GraphSolver.simpleTopology(node);
+    topology = GraphSolver.simpleTopology(node.getGraph().getGraph(), node.getID());
     maxDepth = -1;
     for(Integer depth : topology.values()) {
       if(depth > maxDepth) {
@@ -70,12 +70,12 @@ public class TopologyGraphStyle extends GraphStyle {
   
   
   
-  public Color getNodeStrokeColor(GNodeSprite node) {
-    if(topology == null || node.isSelected) {
+  public Color getNodeStrokeColor(VertexSprite node) {
+    if(topology == null || node.isSelected()) {
       return super.getNodeStrokeColor(node);
     }
     else {
-      Integer depth = topology.get(node);
+      Integer depth = topology.get(node.getID());
       if(depth == null) {
         depth = -1;
       }
@@ -85,12 +85,12 @@ public class TopologyGraphStyle extends GraphStyle {
   }
   
   
-  public Color getNodeFillColor(GNodeSprite node) {
-    if(topology == null || node.isSelected) {
+  public Color getNodeFillColor(VertexSprite node) {
+    if(topology == null || node.isSelected()) {
       return super.getNodeFillColor(node);
     }
     else {
-      Integer depth = topology.get(node);
+      Integer depth = topology.get(node.getID());
       if(depth == null) {
         depth = -1;
       }
@@ -100,13 +100,13 @@ public class TopologyGraphStyle extends GraphStyle {
   }
   
   
-  public Color getEdgeColor(GNodeSprite n1, GNodeSprite n2) {
+  public Color getEdgeColor(VertexSprite n1, VertexSprite n2) {
     if(topology == null) {
       return getColorForDepth(-1, true);
     }
     else {
-      Integer depth1 = topology.get(n1);
-      Integer depth2 = topology.get(n2);
+      Integer depth1 = topology.get(n1.getID());
+      Integer depth2 = topology.get(n2.getID());
       if(depth1 == null) {
         depth1 = -1;
       }
@@ -120,12 +120,12 @@ public class TopologyGraphStyle extends GraphStyle {
   }
   
   
-  public int getEdgeThickness(GNodeSprite n1, GNodeSprite n2) {
+  public int getEdgeThickness(VertexSprite n1, VertexSprite n2) {
     if(topology == null) {
       return super.getEdgeThickness(n1, n2);
     }
     else {
-      if(topology.containsKey(n1)) {
+      if(topology.containsKey(n1.getID())) {
         return super.getEdgeThickness(n1, n2) * 2;
       }
       else {
