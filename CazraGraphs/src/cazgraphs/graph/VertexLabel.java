@@ -58,7 +58,7 @@ public class VertexLabel {
       }
     }
     else if(graph != null) {
-      Dimension2D dims = FontUtils.getStringDimensions(objString, graph.getStyle().font, graph.getStyle().lineSpacing);
+      Dimension2D dims = FontUtils.getStringDimensions(objString, graph.getStyle().getFont(), graph.getStyle().getLineSpacing());
       width = dims.getWidth();
       height = dims.getHeight();
     }
@@ -72,7 +72,7 @@ public class VertexLabel {
   
   /** Returns the dimensions of the label. */
   public Dimension2D getDimensions() {
-    return new Dimension((int) width + graph.getStyle().padding*2, (int) height + graph.getStyle().padding*2);
+    return new Dimension((int) width + graph.getStyle().getLabelPadding()*2, (int) height + graph.getStyle().getLabelPadding()*2);
   }
   
   
@@ -86,9 +86,9 @@ public class VertexLabel {
       g.drawImage(img, 0, 0, null);
     }
     else {
-      g.setFont(graph.getStyle().font);
-      g.setColor(graph.getStyle().textColor);
-      FontUtils.drawString(g, objString, graph.getStyle().lineSpacing);
+      g.setFont(graph.getStyle().getFont());
+      g.setColor(graph.getStyle().getTextColor());
+      FontUtils.drawString(g, objString, graph.getStyle().getLineSpacing());
     }
     
     g.setTransform(origT);

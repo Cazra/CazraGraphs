@@ -15,7 +15,7 @@ import cazgraphs.graph.*;
  * partition are colored dark grey. Other nodes are assigned a color for 
  * their particular subset in the partition.
  */
-public class PartitionGraphStyle extends GraphStyle {
+public class PartitionGraphStyle extends DefaultGraphStyle {
   
   /** Maps each vertexID in the source graph to a group number. */
   private Map<String, Integer> groupMap;

@@ -91,13 +91,6 @@ public class ForceDirectedGraphLayout extends GraphLayout {
     // Move the nodes and dampen their velocity.
     moveNodes(graph);
     dampenNodes(graph);
-    
-    // If the energy drops below our threshold, deactivate the layout algorithm
-    // to save computation time.
-    double energy = getGraphEnergy(graph);
-    if(energy < THRESHOLD) {
-      setPaused(true);
-    }
   }
   
   
@@ -141,9 +134,6 @@ public class ForceDirectedGraphLayout extends GraphLayout {
   /** Dampens the velocity of the vertices as if they are moving through a viscous fluid. */
   public void dampenNodes(GraphSprite graph) {
     for(VertexSprite vertex : graph.getSprites()) {
-    //  vertex.dx *= DAMP;
-    //  vertex.dy *= DAMP;
-      
       setDX(vertex, getDX(vertex)*DAMP);
       setDY(vertex, getDY(vertex)*DAMP);
     }
@@ -196,9 +186,6 @@ public class ForceDirectedGraphLayout extends GraphLayout {
         double xUnit = (other.x - vertex.x)/dist;
         double yUnit = (other.y - vertex.y)/dist;
         
-      //  vertex.dx += nodeAccel * xUnit;
-      //  vertex.dy += nodeAccel * yUnit;
-      
         setDX(vertex, getDX(vertex) + nodeAccel * xUnit);
         setDY(vertex, getDY(vertex) + nodeAccel * yUnit);
       }
@@ -233,9 +220,6 @@ public class ForceDirectedGraphLayout extends GraphLayout {
         double xUnit = (other.x - vertex.x)/dist;
         double yUnit = (other.y - vertex.y)/dist;
         
-      //  vertex.dx += nodeAccel * xUnit;
-      //  vertex.dy += nodeAccel * yUnit;
-        
         setDX(vertex, getDX(vertex) + nodeAccel * xUnit);
         setDY(vertex, getDY(vertex) + nodeAccel * yUnit);
       }
@@ -257,26 +241,9 @@ public class ForceDirectedGraphLayout extends GraphLayout {
       double xUnit = (0 - vertex.x)/dist;
       double yUnit = (0 - vertex.y)/dist;
       
-    //  vertex.dx += nodeAccel * xUnit;
-    //  vertex.dy += nodeAccel * yUnit;
-    
       setDX(vertex, getDX(vertex) + nodeAccel * xUnit);
       setDY(vertex, getDY(vertex) + nodeAccel * yUnit);
     }
   }
   
-  
-  /** Computes the "energy" of the graph. Here, this is the sum of the magnitude of all its nodes' velocities. */
-  public double getGraphEnergy(GraphSprite graph) {
-    double energy = 0;
-    for(VertexSprite vertex : graph.getSprites()) {
-      if(!vertex.isActive()) {
-        continue;
-      }
-      
-      double nodeE = Math.sqrt(getDX(vertex)*getDX(vertex) + getDY(vertex)*getDY(vertex));
-      energy += nodeE / visibleSize;
-    }
-    return energy;
-  }
 }

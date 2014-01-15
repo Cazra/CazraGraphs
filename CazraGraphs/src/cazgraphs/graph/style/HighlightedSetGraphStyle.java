@@ -11,7 +11,7 @@ import cazgraphs.graph.*;
 /** 
  * A graph style that highlights a given set of vertices. 
  */
-public class HighlightedSetGraphStyle extends GraphStyle {
+public class HighlightedSetGraphStyle extends DefaultGraphStyle {
   
   public Color highlightFill = new Color(0xFFAAAA);
   

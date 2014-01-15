@@ -11,7 +11,7 @@ import cazgraphs.graph.*;
 /** 
  * 2-colors a graph. Vertices that aren't 2-colorable are painted a third odd color.
  */
-public class BipartiteGraphStyle extends GraphStyle {
+public class BipartiteGraphStyle extends DefaultGraphStyle {
   
   public Set<String> set1;
   

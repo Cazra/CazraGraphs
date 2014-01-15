@@ -283,11 +283,11 @@ public class GraphMakerPanel extends GamePanel {
           TopologyGraphStyle style = (TopologyGraphStyle) graph.getStyle();
           style.setTopology(node);
         }
-        if(graph.getStyle() instanceof AncestryGraphStyle) {
+        else if(graph.getStyle() instanceof AncestryGraphStyle) {
           AncestryGraphStyle style = (AncestryGraphStyle) graph.getStyle();
           style.setAncestry(node);
         }
-        if(graph.getStyle() instanceof BipartiteGraphStyle) {
+        else if(graph.getStyle() instanceof BipartiteGraphStyle) {
           BipartiteGraphStyle style = (BipartiteGraphStyle) graph.getStyle();
           style.computeBipartiteness(graph, node.getID());
           
@@ -301,7 +301,7 @@ public class GraphMakerPanel extends GamePanel {
           
           graph.setLayout(new BipartiteGraphLayout(node.getID(), hspace, vspace));
         }
-        else {
+        else if(node.getChildren().size() > 0) {
           node.setExpanded(!node.isExpanded());
         }
       }
@@ -341,6 +341,11 @@ public class GraphMakerPanel extends GamePanel {
         graph.removeVertex(sprite.getID());
       }
       graph.unselectAll();
+    }
+    
+    // Pausing/Unpausing the layout algorithm
+    if(keyboard.justPressed(KeyEvent.VK_P)) {
+      graph.getLayout().setPaused(!graph.getLayout().isPaused());
     }
     
     

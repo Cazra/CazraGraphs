@@ -11,7 +11,7 @@ import cazgraphs.graph.*;
 /** 
  * 2-colors a graph. Vertices that aren't 2-colorable are painted a third odd color.
  */
-public class CyclicTreeGraphStyle extends GraphStyle {
+public class CyclicTreeGraphStyle extends DefaultGraphStyle {
   
   public Color cycleStroke = new Color(0xAA55AA);
   public Color cycleFill = new Color(0xFFAAFF);

@@ -261,6 +261,11 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
     return parent;
   }
   
+  /** Returns the set of sprites nested below this one. */
+  public Set<VertexSprite> getChildren() {
+    return new HashSet<VertexSprite>(children);
+  }
+  
   /** Nests a sprite below this one. */
   public void addChild(VertexSprite v) {
     if(v.parent != null) {
@@ -421,11 +426,6 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
     
     g.setColor(new Color(0xAA0000));
     getStyle().draw(g, this);
-    
-    Camera camera = graph.getStyle().camera;
-    if(camera != null && camera.zoom <= 1.0/12) {
-      return;
-    }
     label.draw(g);
   }
   
@@ -439,7 +439,9 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
     if(!isVisible()) {
       VertexSprite visibleAncestor = getFirstVisible();
       if(visibleAncestor != null) {
-        
+        for(String otherID : getEdges()) {
+          visibleAncestor.drawEdge(g, drawnEdges, otherID);
+        }
       }
       
       return;
@@ -459,10 +461,10 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
       return;
     } 
     else if(!other.isVisible()) {
-    //  VertexSprite visibleAncestor = other.getFirstVisible();
-    //  if(visibleAncestor != null) {
-    //    drawEdge(g, drawnEdges, visibleAncestor.getID());
-    //  }
+      other = other.getFirstVisible();
+      if(other != this) {
+        drawEdge(g, drawnEdges, other.getID());
+      }
       return;
     }
     
@@ -474,7 +476,7 @@ public class VertexSprite extends Sprite implements Comparable<VertexSprite>, To
       edgeStyle.setLabel(edgeLabels.get(otherID));
       
       drawnEdges.add(edgeKey);
-      edgeStyle.draw(g, this, other, true); //graph.isDirected);
+      edgeStyle.draw(g, this, other);
     }
   }
   

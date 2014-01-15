@@ -21,7 +21,7 @@ public abstract class EdgeStyle {
    * It is assumed that this is drawing in the GraphSprite's geometric space.
    * (Call this from VertexSprite's drawEdges method, and you should be fine.)
    */
-  public void draw(Graphics2D g, VertexSprite n1, VertexSprite n2, boolean drawArrowHeads) {
+  public void draw(Graphics2D g, VertexSprite n1, VertexSprite n2) {
     Stroke origStroke = g.getStroke();
     
     // Edge to self.
@@ -67,11 +67,9 @@ public abstract class EdgeStyle {
       }
 
       // Draw the arrow heads.
-      if(drawArrowHeads) {
-        drawArrowHead(g, endX, endY, angle);
-        if(n2.hasEdge(n1.getID())) {
-          drawArrowHead(g, startX, startY, angle + 180);
-        }
+      drawArrowHead(g, endX, endY, angle);
+      if(n2.hasEdge(n1.getID())) {
+        drawArrowHead(g, startX, startY, angle + 180);
       }
     }
     

@@ -9,7 +9,7 @@ import cazgraphs.graph.*;
  * A graph style that color codes nodes based on the topology of the graph 
  * starting from some specified node. 
  */
-public class TopologyGraphStyle extends GraphStyle {
+public class TopologyGraphStyle extends DefaultGraphStyle {
   
   /** The computed topology for the graph. */
   public Map<String, Integer> topology = null;

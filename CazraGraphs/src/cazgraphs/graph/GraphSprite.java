@@ -44,7 +44,7 @@ public class GraphSprite extends Sprite {
   public Set<VertexSprite> selectedNodes = new HashSet<>();
   
   /** The style for specifying the colors and font metrics for this graph. */
-  private GraphStyle style = new GraphStyle();
+  private GraphStyle style = new DefaultGraphStyle();
   
   
   /** The layout algorithm used by this graph. */

@@ -339,7 +339,7 @@ public class GraphMakerMenuBar extends JMenuBar {
         
         public void actionPerformed(ActionEvent e) {
           GraphSprite graph = GraphMakerMain.instance.graphPanel.graph;
-          graph.setStyle(new GraphStyle());
+          graph.setStyle(new DefaultGraphStyle());
         }
         
       });

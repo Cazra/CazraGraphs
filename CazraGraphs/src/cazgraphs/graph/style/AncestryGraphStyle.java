@@ -9,7 +9,7 @@ import cazgraphs.graph.*;
  * A graph style that colors nodes based on whether they are an ancestor of a 
  * node, one of its descendants, or neither. 
  */
-public class AncestryGraphStyle extends GraphStyle {
+public class AncestryGraphStyle extends DefaultGraphStyle {
   
   public static int NOT_RELATED = 0;
   
