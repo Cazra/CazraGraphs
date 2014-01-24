@@ -21,6 +21,7 @@ import pwnee.text.Tooltip;
 import cazgraphs.graph.*;
 import cazgraphs.graph.layout.*;
 import cazgraphs.graph.style.*;
+import cazgraphs.io.CazGraphTextIO;
 
 
 /** 
@@ -87,45 +88,9 @@ public class GraphMakerPanel extends GamePanel {
   
   public void loadFromFile(String filepath) {
     reset();
+    
     try {
-      BufferedReader br = new BufferedReader(new FileReader(filepath));
-      String input = "";
-      String line = br.readLine();
-      while(line != null) {
-        input += line + "\n";
-        line = br.readLine();
-      }
-      
-      System.out.println(input);
-      
-      String[] sections = input.split("--");
-      
-      // vertices
-      System.out.println("vertices: ");
-      String[] vertices = sections[2].split("\n");
-      for(String vertex : vertices) {
-        System.out.println(vertex);
-        if(!vertex.equals("")) {
-          graph.addVertex(vertex.trim());
-        }
-      }
-      
-      // edges
-      System.out.println("edges: ");
-      String[] edges = sections[4].split("\n");
-      for(String edge : edges) {
-        System.out.println(edge);
-        if(!edge.equals("")) {
-          String[] ends = edge.split("->");
-          String source = ends[0].trim();
-          
-          String[] targets = ends[1].split(",");
-          for(String target : targets) {
-            target = target.trim();
-            graph.addEdge(source, target);
-          }
-        }
-      }
+      graph = CazGraphTextIO.loadFromFile(filepath);
     }
     catch(Exception e) {
       JOptionPane.showMessageDialog(this, "Could not read graph from file: " + filepath);
@@ -141,39 +106,7 @@ public class GraphMakerPanel extends GamePanel {
    */
   public void saveToFile(String destPath) {
     try {
-      String output = "--\nVertices\n--\n";
-      
-      List<String> sortedVertices = new ArrayList<>(graph.getVertexIDs());
-      Collections.sort(sortedVertices);
-      
-      for(String name : sortedVertices) {
-        output += name + "\n";
-      }
-      
-      
-      output += "--\nEdges\n--\n";
-      for(String name : sortedVertices) {
-        output += name + " -> ";
-        
-        List<String> sortedEdges = new ArrayList<>(graph.getEdges(name));
-        Collections.sort(sortedEdges);
-        
-        boolean first = true;
-        for(String toID : sortedEdges) {
-          if(first) {
-            first = false;
-          }
-          else {
-            output += ", ";
-          }
-          output += toID;
-        }
-        output += "\n";
-      }
-      
-      FileWriter fw = new FileWriter(destPath);
-      fw.write(output);
-      fw.close();
+      CazGraphTextIO.saveToFile(graph, destPath);
     }
     catch(Exception e) {
       JOptionPane.showMessageDialog(this, "Could not save to file: " + destPath);
@@ -386,6 +319,7 @@ public class GraphMakerPanel extends GamePanel {
     drawOrigin(g2D);
     graph.render(g2D);
     
+    // Draw graphics from user interaction.
     if(makeEdgeFrom != null) {
       g.setColor(new Color(0xAA8855));
       Line2D line = new Line2D.Double(makeEdgeFrom.x, makeEdgeFrom.y, mouseWorld.getX(), mouseWorld.getY());

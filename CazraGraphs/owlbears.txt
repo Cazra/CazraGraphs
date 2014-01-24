@@ -1,8 +1,8 @@
---
 Vertices
-This is a sample graph of some Dungeon & Dragons 3.5 characters and their skills. 
-An edge between a character and a skill represents that that character has at 
-least one rank in that skill.
+This is a sample graph of some Dungeon & Dragons 3.5 characters and 
+their skills. An edge between a character and a skill represents that that 
+character has at least one rank in that skill.
+
 Cazra is an artificer.
 Mort is a rouge.
 Delia is a healer.
