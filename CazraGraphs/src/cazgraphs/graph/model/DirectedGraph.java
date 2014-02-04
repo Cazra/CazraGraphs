@@ -15,11 +15,17 @@ import cazgraphs.CazgraphException;
 /** A data structure for a directed graph. */
 public class DirectedGraph {
   
+  /** Attributes of the graph as a whole. */
+  private Map<String, String> graphAttributes;
+  
   /** 
    * The vertices, represented as a map of unique vertex IDs to the objects 
    * contained at the vertices. 
    */
   private Map<String, Object> vertices;
+  
+  /** The attributes for each vertex in the graph. */
+  private Map<String, Map<String, String>> vertexAttributes;
   
   /** The sets of forward edges for all vertices in the graph. */
   private Map<String, Set<String>> edges;
@@ -27,15 +33,23 @@ public class DirectedGraph {
   /** The sets of backward edges corresponding to the graph's set of forward edges. */
   private Map<String, Set<String>> backEdges;
   
+  /** The attributes for the edges of the graph. */
+  private Map<String, Map<String, Map<String, String>>> edgeAttributes;
   
   /** Creates an empty directed graph. */
   public DirectedGraph() {
+    graphAttributes = new HashMap<>();
+    vertexAttributes = new HashMap<>();
+    edgeAttributes = new HashMap<>();
     vertices = new HashMap<>();
     edges = new HashMap<>();
     backEdges = new HashMap<>();
   }
   
   
+  
+  
+  //////// Graph operations
   
   /** Returns the number of vertices in the graph. */
   public int size() {
@@ -69,6 +83,31 @@ public class DirectedGraph {
     }
     
     return copy;
+  }
+  
+  
+  /** 
+   * Returns the value of some graph attribute. If the attribute has not 
+   * been set, "" is returned. 
+   */
+  public String getGraphAttribute(String attrName) {
+    String result = graphAttributes.get(attrName);
+    if(result == null) {
+      result = "";
+    }
+    return result;
+  }
+  
+  /** 
+   * Sets the value of some graph attribute.
+   */
+  public void setGraphAttribute(String attrName, String value) {
+    if(attrName == null || value == null) {
+      throw new CazgraphException("Attribute names and their values cannot be null.");
+    }
+    else {
+      graphAttributes.put(attrName, value);
+    }
   }
   
   //////// Vertex operations
@@ -108,8 +147,11 @@ public class DirectedGraph {
     }
     
     vertices.put(id, obj);
+    vertexAttributes.put(id, new HashMap<String, String>());
+    
     edges.put(id, new HashSet<String>());
     backEdges.put(id, new HashSet<String>());
+    edgeAttributes.put(id, new HashMap<String, Map<String, String>>());
   }
   
   
@@ -117,6 +159,8 @@ public class DirectedGraph {
   public void removeVertex(String id) {
     removeAllEdges(id);
     vertices.remove(id);
+    vertexAttributes.remove(id);
+    edgeAttributes.remove(id);
   }
   
   
@@ -134,6 +178,33 @@ public class DirectedGraph {
         removeVertex(vertexID);
       }
       
+    }
+  }
+  
+  
+  /** Gets the value of some attribute for a vertex. If the attribute has not been defined, "" is returned. */
+  public String getVertexAttribute(String vertexID, String attrName) {
+    if(!vertices.containsKey(vertexID)) {
+      throw new CazgraphException("Vertex " + vertexID + " doesn't exist.");
+    }
+    else {
+      String result = vertexAttributes.get(vertexID).get(attrName);
+      if(result == null) {
+        return "";
+      }
+      else {
+        return result;
+      }
+    }
+  }
+  
+  /** Sets some attribute for a vertex. */
+  public void getVertexAttribute(String vertexID, String attrName, String value) {
+    if(!vertices.containsKey(vertexID)) {
+      throw new CazgraphException("Vertex " + vertexID + " doesn't exist.");
+    }
+    else {
+      vertexAttributes.get(vertexID).put(attrName, value);
     }
   }
   
@@ -199,17 +270,22 @@ public class DirectedGraph {
       backEdges.put(to, new HashSet<String>());
     }
     backEdges.get(to).add(from);
+    
+    // Construct the attributes map for the edge. 
+    edgeAttributes.get(from).put(to, new HashMap<String, String>());
   }
   
   
   /** Removes a directed edge from the graph if it exists. */
   public void removeEdge(String from, String to) {
     if(edges.containsKey(from)) {
-        edges.get(from).remove(to);
+      edges.get(from).remove(to);
+      edgeAttributes.get(from).remove(to);
     }
     
     if(backEdges.containsKey(to)) {
       backEdges.get(to).remove(from);
+      edgeAttributes.get(to).remove(from);
     }
   }
   
@@ -218,6 +294,7 @@ public class DirectedGraph {
   public void removeAllEdges() {
     edges.clear();
     backEdges.clear();
+    edgeAttributes.clear();
   }
   
   
@@ -233,6 +310,35 @@ public class DirectedGraph {
   }
   
   
+  
+  /** Set an attribute for an existing edge. */
+  public void setEdgeAttribute(String fromID, String toID, String attrName, String value) {
+    if(hasEdge(fromID, toID)) {
+      edgeAttributes.get(fromID).get(toID).put(attrName, value);
+    }
+    else {
+      throw new CazgraphException("Edge " + fromID + " -> " + toID + " doesn't exist.");
+    }
+  }
+  
+  /** 
+   * Returns the value of some attribute for an existing edge. 
+   * If the attribute doesn't exist, "" is returned. 
+   */
+  public String getEdgeAttribute(String fromID, String toID, String attrName) {
+    if(hasEdge(fromID, toID)) {
+      String result = edgeAttributes.get(fromID).get(toID).get(attrName);
+      if(result == null) {
+        return "";
+      }
+      else {
+        return result;
+      }
+    }
+    else {
+      throw new CazgraphException("Edge " + fromID + " -> " + toID + " doesn't exist.");
+    }
+  }
   
 }
 

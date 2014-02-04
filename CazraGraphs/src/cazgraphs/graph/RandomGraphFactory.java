@@ -18,9 +18,8 @@ import cazgraphs.graph.style.*;
 
 public class RandomGraphFactory {
   
-  public static GraphSprite randomGraph(int numNodes, double connectivity, GraphLayout layout) {
+  public static GraphSprite randomGraph(int numNodes, double connectivity) {
     GraphSprite graph = new GraphSprite();
-    graph.setLayout(layout);
     
     // produce the nodes.
     int nodesMade = 0;

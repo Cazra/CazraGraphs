@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 
 import cazgraphs.CazgraphException;
+import cazgraphs.Debug;
 import cazgraphs.graph.GraphSprite;
 
 /** 
@@ -25,50 +26,52 @@ import cazgraphs.graph.GraphSprite;
  * edges of each vertex. Each line is of the form
  * <br/>[source vertex] -> [comma-delimited list of destination vertices]
  */
-public class CazGraphTextIO {
+public class CazGraphTextIO extends GraphIO {
   
-  /** Whether debug messages are enabled for this class. False by default. */
-  public static boolean debugEnabled = false;
   
-  /** Reads a graph sprite from a file in the CazGraph text format. */
-  public static GraphSprite loadFromFile(String filepath) {
-    GraphSprite graph = new GraphSprite();
-    try {
-      BufferedReader br = new BufferedReader(new FileReader(filepath));
-      String input = "";
-      String line = br.readLine();
-      while(line != null) {
-        input += line + "\n";
-        line = br.readLine();
-      }
-      
-      return loadFromString(input);
+  private static CazGraphTextIO instance = null;
+  
+  
+  /** Returns the singleton instance of this class. */
+  public static CazGraphTextIO getInstance() {
+    if(instance == null) {
+      instance = new CazGraphTextIO();
     }
-    catch(Exception e) {
-      throw new CazgraphException("Could not read graph from file: " + filepath, e);
-    }
+    return instance;
   }
   
+  
+  /** The default file extension for CazGraph text files is "txt". */
+  public static String defaultFileExtension() {
+    return "txt";
+  }
+  
+  
+  public String getDefaultFileExtension() {
+    return defaultFileExtension();
+  }
+  
+  
   /** Reads a graph sprite from a string in the CazGraph text format. */
-  public static GraphSprite loadFromString(String str) {
+  public GraphSprite unstringify(String str) {
     GraphSprite graph = new GraphSprite();
     String[] sections = str.split("--");
       
     // vertices
-    debugln("vertices: ");
+    Debug.debugln("vertices: ");
     String[] vertices = sections[1].split("\n");
     for(String vertex : vertices) {
-      debugln(vertex);
+      Debug.debugln(vertex);
       if(!vertex.equals("")) {
         graph.addVertex(vertex.trim());
       }
     }
     
     // edges
-    debugln("edges: ");
+    Debug.debugln("edges: ");
     String[] edges = sections[3].split("\n");
     for(String edge : edges) {
-      debugln(edge);
+      Debug.debugln(edge);
       if(!edge.equals("")) {
         String[] ends = edge.split("->");
         String source = ends[0].trim();
@@ -89,23 +92,9 @@ public class CazGraphTextIO {
   
   
   
-  /** Saves the graph to a file in the CazGraph text format. */
-  public static void saveToFile(GraphSprite graph, String filepath) {
-    try {
-      FileWriter fw = new FileWriter(filepath);
-      fw.write(stringify(graph));
-      fw.close();
-    }
-    catch(Exception e) {
-      throw new CazgraphException("Could not save graph to file: " + filepath, e);
-    }
-  }
-  
-  
-  
   
   /** Creates a String representation of a graph in CazGraph text format. */
-  public static String stringify(GraphSprite graph) {
+  public String stringify(GraphSprite graph) {
     String result = "Vertices\n--\n";
       
     List<String> sortedVertices = new ArrayList<>(graph.getVertexIDs());
@@ -140,12 +129,5 @@ public class CazGraphTextIO {
   }
   
   
-  
-  /** Prints debugging messages if debugging is enabled for this class. */
-  private static void debugln(String str) {
-    if(debugEnabled) {
-      System.out.println(str);
-    }
-  }
 }
 

@@ -7,15 +7,23 @@ import javax.swing.filechooser.*;
 
 import pwnee.*;
 
+import cazgraphs.CazgraphException;
 import cazgraphs.graph.*;
 import cazgraphs.graph.layout.*;
 import cazgraphs.graph.model.DirectedGraph;
 import cazgraphs.graph.style.*;
+import cazgraphs.io.CazGraphTextIO;
+import cazgraphs.io.GraphIO;
+import cazgraphs.io.dot.DotIO;
 
 
 
 /** The menubar for the Graph Maker application. */
 public class GraphMakerMenuBar extends JMenuBar {
+  
+  private JFileChooser chooser = null;
+    private FileNameExtensionFilter txtFilter = null;
+    private FileNameExtensionFilter dotFilter = null;
   
   private JMenu fileMenu = null;
     private JMenuItem newItem = null;
@@ -51,6 +59,21 @@ public class GraphMakerMenuBar extends JMenuBar {
     this.add(getLayoutMenu());
     this.add(getStyleMenu());
     this.add(getAlgsMenu());
+  }
+  
+  
+  /** Gets the file chooser for the Graph Maker, which supports some standard graph file formats. */
+  public JFileChooser getFileChooser() {
+    if(chooser == null) {
+      chooser = new JFileChooser(".");
+      
+      txtFilter = new FileNameExtensionFilter("CazGraphs TXT text", "txt");
+      chooser.setFileFilter(txtFilter);
+      
+      dotFilter = new FileNameExtensionFilter("GraphVis DOT", "dot");
+      chooser.addChoosableFileFilter(dotFilter);
+    }
+    return chooser;
   }
   
   
@@ -106,10 +129,9 @@ public class GraphMakerMenuBar extends JMenuBar {
             connectivity = Double.parseDouble(JOptionPane.showInputDialog("avg edges per node:"));
           }
           catch(Exception ex) {
-            JOptionPane.showMessageDialog(self, "Hello, I am ERROR.");
-            ex.printStackTrace();
+            showErrorMessage(ex.getMessage());
           }
-          GraphMakerMain.instance.graphPanel.graph = RandomGraphFactory.randomGraph(nodes, connectivity, new ForceDirectedGraphLayout());
+          GraphMakerMain.instance.graphPanel.setGraph(RandomGraphFactory.randomGraph(nodes, connectivity));
         }
         
       });
@@ -123,21 +145,29 @@ public class GraphMakerMenuBar extends JMenuBar {
     if(openItem == null) {
       openItem = new JMenuItem("Open");
       openItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, ActionEvent.CTRL_MASK));
+      final Component self = this;
       openItem.addActionListener(new ActionListener() {
         
         public void actionPerformed(ActionEvent e) {
-          JFileChooser chooser = new JFileChooser(".");
-          FileNameExtensionFilter filter = new FileNameExtensionFilter(
-            "TXT text file", "txt");
-          chooser.setFileFilter(filter);
-          int returnVal = chooser.showOpenDialog(GraphMakerMain.instance);
-          
+          int returnVal = getFileChooser().showOpenDialog(GraphMakerMain.instance);
           if(returnVal == JFileChooser.APPROVE_OPTION) {
-            GraphMakerMain.instance.graphPanel.loadFromFile(chooser.getSelectedFile().getPath());
+            
+            try {
+              String path = chooser.getSelectedFile().getPath();
+              
+              GraphIO loader = getChooserIO(chooser.getFileFilter());
+              GraphSprite graph = loader.loadFromFile(path);
+              
+              GraphMakerMain.instance.graphPanel.setGraph(graph);
+              
+              layoutNoneItem.setSelected(true);
+              styleNoneItem.setSelected(true);
+            }
+            catch(Exception ex) {
+              showErrorMessage("Could not load graph: " + ex.getMessage());
+              ex.printStackTrace();
+            }
           }
-          
-          layoutNoneItem.setSelected(true);
-          styleNoneItem.setSelected(true);
         }
         
       });
@@ -154,18 +184,21 @@ public class GraphMakerMenuBar extends JMenuBar {
       saveItem.addActionListener(new ActionListener() {
         
         public void actionPerformed(ActionEvent e) {
-          JFileChooser chooser = new JFileChooser(".");
-          FileNameExtensionFilter filter = new FileNameExtensionFilter(
-            "TXT text file", "txt");
-          chooser.setFileFilter(filter);
-          int returnVal = chooser.showSaveDialog(GraphMakerMain.instance);
-          
+          int returnVal = getFileChooser().showSaveDialog(GraphMakerMain.instance);
           if(returnVal == JFileChooser.APPROVE_OPTION) {
-            String path = chooser.getSelectedFile().getPath();
-            if(!path.endsWith(".txt")) {
-              path += ".txt";
+            try {
+              String path = chooser.getSelectedFile().getPath();
+              GraphIO loader = getChooserIO(chooser.getFileFilter());
+              
+              if(!path.toLowerCase().endsWith("." + loader.getDefaultFileExtension())) {
+                path += "." + loader.getDefaultFileExtension();
+              }
+              
+              loader.saveToFile(GraphMakerMain.instance.graphPanel.graph, path);
             }
-            GraphMakerMain.instance.graphPanel.saveToFile(path);
+            catch(Exception ex) {
+              showErrorMessage("Could not save graph: " + ex.getMessage());
+            }
           }
         }
         
@@ -491,5 +524,47 @@ public class GraphMakerMenuBar extends JMenuBar {
     }
     return findComponentsItem;
   }
-
+  
+  
+  /** Displays an error pop-up message. */
+  private void showErrorMessage(String msg) {
+    JOptionPane.showMessageDialog(this, msg, "Hello, I am ERROR.", JOptionPane.ERROR_MESSAGE);
+  }
+  
+  
+  /** Returns the appropriate GraphIO object for loading or saving the last selected file. */
+  private GraphIO getChooserIO(String path) {
+    String ext = path.substring(path.lastIndexOf(".") + 1).toLowerCase();
+    
+    if(ext.equals(CazGraphTextIO.defaultFileExtension())) {
+      return CazGraphTextIO.getInstance();
+    }
+    else if(ext.equals(DotIO.defaultFileExtension())) {
+      return DotIO.getInstance();
+    }
+    else {
+      throw new CazgraphException("Unsupported file type: " + ext);
+    }
+  }
+  
+  
+  private GraphIO getChooserIO(FileFilter filter) {
+    if(filter == txtFilter) {
+      return CazGraphTextIO.getInstance();
+    }
+    else if(filter == dotFilter) {
+      return DotIO.getInstance();
+    }
+    else {
+      throw new CazgraphException("Unsupported file filter");
+    }
+  }
+  
+  
+  /** Returns the extension of a file path. */
+  private String getFileExtension(String path) {
+    
+    return path.substring(path.lastIndexOf(".") + 1).toLowerCase();
+  }
+  
 }

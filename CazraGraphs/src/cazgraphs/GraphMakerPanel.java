@@ -59,6 +59,7 @@ public class GraphMakerPanel extends GamePanel {
   public GraphMakerPanel(String filepath) {
     super();
     reset();
+    Debug.debugEnabled = true;
     
     if(filepath != null) {
       loadFromFile(filepath);
@@ -90,7 +91,7 @@ public class GraphMakerPanel extends GamePanel {
     reset();
     
     try {
-      graph = CazGraphTextIO.loadFromFile(filepath);
+      graph = CazGraphTextIO.getInstance().loadFromFile(filepath);
     }
     catch(Exception e) {
       JOptionPane.showMessageDialog(this, "Could not read graph from file: " + filepath);
@@ -100,13 +101,21 @@ public class GraphMakerPanel extends GamePanel {
   }
   
   
+  public void setGraph(GraphSprite graph) {
+    reset();
+    this.graph = graph;
+    graph.setLayout(new ForceDirectedGraphLayout());
+  }
+  
+  
+  
   /** 
    * Saves the current graph to the destination file path. 
    * The vertex and edge data in the output file are sorted alphabetically. 
    */
   public void saveToFile(String destPath) {
     try {
-      CazGraphTextIO.saveToFile(graph, destPath);
+      CazGraphTextIO.getInstance().saveToFile(graph, destPath);
     }
     catch(Exception e) {
       JOptionPane.showMessageDialog(this, "Could not save to file: " + destPath);
